@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
-from api_extension import *
 
 from . import util, puppet
 

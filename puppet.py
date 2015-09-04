@@ -1,9 +1,7 @@
 from fabric.api import *
-from api_extension import *
 
 import re
 import sys
-
 
 @task
 def install(master=None, environment='production'):
@@ -24,7 +22,7 @@ def install(master=None, environment='production'):
     sudo("puppet config --section agent set pluginsync true")
     sudo("puppet config --section agent set server %s" % master)
     sudo("puppet config --section agent set environment %s" % environment)
-    
+
 @task
 def run_agent():
     sudo_except("puppet agent --onetime --no-daemonize --verbose")
