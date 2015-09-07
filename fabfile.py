@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Public Fabric-commands from fabric-bsd repository. These commands should be usable without further configuration"""
 from fabric.api import *
+from os.path import dirname, split, abspath
+from hostinfo import *
 import os
 import sys
-from os.path import dirname, split, abspath
 import glob
+
+env.roledefs = load_roledefs()
 
 # Hacking our way into __init__.py of current package
 current_dir = dirname(abspath(__file__))
