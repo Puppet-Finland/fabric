@@ -15,12 +15,20 @@ class Vars:
         self.release_files = { '/etc/fedora-release': { 'osfamily': 'RedHat' },
                                '/etc/redhat-release': { 'osfamily': 'RedHat' } }
 
-        self.osfamily = self.get_osfamily()
-        self.lsbdistcodename = self.get_lsbdistcodename()
+        self. lsbdistcodename = self.get_lsbdistcodename()
+
+        osfamily = self.get_osfamily()
 
         # Populate OS-specific parameters
-        if self.osfamily == 'Debian': self.os = Debian()
-        elif self.osfamily == 'RedHat': self.os = RedHat()
+        if osfamily == 'Debian':
+            self.os = Debian()
+            self.osfamily = "Debian"
+        elif osfamily == 'Ubuntu':
+            self.os = Debian()
+            self.osfamily = "Debian"
+        elif osfamily == 'RedHat':
+            self.os = RedHat()
+            self.osfamily = "RedHat"
 
     def get_osfamily(self):
         """Detect operating system family"""
