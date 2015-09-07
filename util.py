@@ -26,9 +26,7 @@ def ntp_status():
 @task
 def install_sudo():
     """Install sudo, if it's not present"""
-
-    # Test if sudo is installed
+    vars = Vars()
     with settings(warn_only=True):
-        sudo_exists = run("which sudo")
-    if sudo_exists.failed:
-        run("apt-get install sudo")
+        if run("which sudo").failed:
+            run(vars.os.package_install_cmd % "sudo")
