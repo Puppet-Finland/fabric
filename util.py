@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
-
 from datetime import datetime
 
 def getisotime():

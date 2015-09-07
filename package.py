@@ -1,6 +1,9 @@
 from fabric.api import *
 from vars import *
+from urlparse import urlparse
+from vars import *
 import os
+import re
 
 @task
 def is_installed(package):
