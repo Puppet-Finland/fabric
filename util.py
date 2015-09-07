@@ -19,11 +19,6 @@ def df():
     run("df -h")
 
 @task
-def ntp_status():
-    """Show ntp status"""
-    run("/etc/init.d/ntp status")
-
-@task
 def install_sudo():
     """Install sudo, if it's not present"""
     vars = Vars()
@@ -41,4 +36,3 @@ def add_host_entry(ip, hostname, domain):
     with hide("warnings"):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
-
