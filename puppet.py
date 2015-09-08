@@ -59,7 +59,7 @@ def install_puppetlabs_release_package(pc):
 
 @task
 def setup_agent4(pc="1"):
-    """Setup Puppet 4 Agent"""
+    """Setup Puppet 4 agent"""
     import package
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
