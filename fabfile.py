@@ -16,4 +16,8 @@ __import__(package_name, globals(), locals(), [], -1)
 __package__ = package_name
 from . import *
 
-env.roledefs = hostinfo.load_roledefs()
+try:
+    open("roledefs.pickle")
+    env.roledefs = hostinfo.load_roledefs()
+except IOError:
+    pass
