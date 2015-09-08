@@ -1,7 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-#
-# Convert a hostinfo list into env.hosts and env.roledefs
+"""Convert Hiera data into env.roledefs"""
 from fabric.api import *
 import sys
 import pickle
@@ -10,7 +7,7 @@ import ConfigParser
 
 @serial
 @task
-def generate_roledefs():
+def generate():
     """Generate a list of hosts and roles based on Hiera data"""
 
     # Ensure that we're running in the correct local directory
@@ -101,7 +98,7 @@ def generate_roledefs():
 @serial
 @runs_once
 @hosts('localhost')
-def show_hostinfo():
+def show():
     '''Display contents of env.roledefs'''
     print "Roles:"
     for role in sorted(env.roledefs):
