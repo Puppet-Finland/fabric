@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
 from datetime import datetime
+from vars import *
 
 def getisotime():
     """Convenience method to get current UTC time in yyyymmddhhmm format"""
@@ -35,6 +36,13 @@ def add_host_entry(ip, hostname, domain):
     with hide("warnings"):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
+
+def add_to_path(path):
+    """Add a new directory to PATH for the default shell"""
+    from fabric.contrib.files import append
+
+    vars = Vars()
+    append(vars.os.default_shell_config, ("export PATH=$PATH:%s" % path), use_sudo=True, shell=vars.os.default_shell)
 
 @task
 def reboot(really='no'):

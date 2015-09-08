@@ -69,7 +69,7 @@ class Vars:
 class Linux(object):
     """Parameters for Linux-based operating systems"""
     def __init__(self, *args, **kwargs):
-        """Currently empty"""
+        """Common settings for Linux"""
         if self.has_systemd():
             self.service_start_cmd = "systemctl start %s"
             self.service_stop_cmd = "systemctl stop %s"
@@ -80,6 +80,9 @@ class Linux(object):
             self.service_stop_cmd = "service %s stop"
             self.service_restart_cmd = "service %s restart"
             self.service_status_cmd = "service %s status"
+
+        self.default_shell = "/bin/bash"
+        self.default_shell_config = "/etc/bash.bashrc"
 
     def has_systemd(self):
         """Determine if the operating system uses systemd"""
