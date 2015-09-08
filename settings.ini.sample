@@ -1,0 +1,2 @@
+[puppet]
+puppet_tags = role, importance, admin, connectivity

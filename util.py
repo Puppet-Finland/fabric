@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
-from api_extension import *
-
 from datetime import datetime
 
 def getisotime():
@@ -20,16 +18,33 @@ def df():
     run("df -h")
 
 @task
-def ntp_status():
-    """Show ntp status"""
-    run("/etc/init.d/ntp status")
-
-@task
 def install_sudo():
     """Install sudo, if it's not present"""
-
-    # Test if sudo is installed
+    vars = Vars()
     with settings(warn_only=True):
-        sudo_exists = run("which sudo")
-    if sudo_exists.failed:
-        run("apt-get install sudo")
+        if run("which sudo").failed:
+            run(vars.os.package_install_cmd % "sudo")
+
+@task
+def add_host_entry(ip, hostname, domain):
+    """Add an entry to /etc/hosts"""
+    host_line = ip+" "+hostname+"."+domain+" "+hostname
+
+    # Only add entry if it does not exist already. We don't want warnings about
+    # grep not finding the entry, as that's to be expected.
+    with hide("warnings"):
+        if run("grep \""+host_line+"\" /etc/hosts").failed:
+            sudo("echo "+host_line+" >> /etc/hosts")
+
+@task
+def reboot(really='no'):
+    """Reboot the machine. Use reboot:really=YES to actually reboot."""
+
+    if really == 'YES':
+        sudo("shutdown -r now")
+    else:
+        print("Use reboot:really=YES to actually reboot")
+
+def isTrue(s):
+    """Convert a Yes into True and everything else into False"""
+    return s == "Yes"

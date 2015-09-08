@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
-from api_extension import *
-
-from . import util, puppet
 
 @task
 def bootstrap(puppetmaster=''):
     """Bootstrap an Ubuntu 14.04 host on Upcloud"""
+    from . import util, puppet
+
     util.install_sudo()
 
     fqdn = run('hostname -f')
