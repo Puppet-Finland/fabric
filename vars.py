@@ -83,6 +83,7 @@ class Linux(object):
 
         self.default_shell = "/bin/bash"
         self.default_shell_config = "/etc/bash.bashrc"
+        self.default_loginshell_config = "/etc/profile"
 
     def has_systemd(self):
         """Determine if the operating system uses systemd"""

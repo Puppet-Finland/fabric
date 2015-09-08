@@ -37,12 +37,19 @@ def add_host_entry(ip, hostname, domain):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
 
+@task
+def set_hostname(hostname):
+    """Set hostname"""
+    sudo("echo "+hostname+" > /etc/hostname")
+    sudo("hostname "+hostname)
+
 def add_to_path(path):
     """Add a new directory to PATH for the default shell"""
     from fabric.contrib.files import append
 
     vars = Vars()
-    append(vars.os.default_shell_config, ("export PATH=$PATH:%s" % path), use_sudo=True, shell=vars.os.default_shell)
+    for file in [ vars.os.default_shell_config, vars.os.default_loginshell_config ]:
+        append(file, "export PATH=$PATH:"+path, use_sudo=True)
 
 @task
 def reboot(really='no'):
