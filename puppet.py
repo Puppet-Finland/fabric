@@ -65,14 +65,37 @@ def setup_agent4(pc="1"):
     package.install("puppet-agent")
 
 @task
-def setup_server4(pc="1"):
+def setup_server4(pc="1", hostname="puppet", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
-    import package
+    import package, util
+
+    master_conf = "files/master.conf"
+    try:
+        open(master_conf)
+    except IOError:
+        print "ERROR: missing puppetmaster config from files/master.conf!"
+        sys.exit(1)
+
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
+    copy_puppet_conf4(master_conf)
+    util.add_to_path("/opt/puppetlabs/bin")
+    util.set_hostname(hostname)
 
-def copy_puppet_conf4():
+    for module in forge_modules:
+        add_forge_module(module)
+
+def copy_puppet_conf4(localfile="files/agent.conf"):
     """Copy over puppet.conf"""
     remote_puppet_conf = "/etc/puppetlabs/puppet/puppet.conf"
-    put("files/puppet.conf", remote_puppet_conf, use_sudo=True, mode="0644")
+    put(localfile, remote_puppet_conf, use_sudo=True, mode="0644")
     sudo("chown root:root "+remote_puppet_conf)
+
+@task
+def add_forge_module(name):
+    """Add a forge module"""
+    # puppet module list shows dashes instead of slashes due to historic reasons
+    listname = name.replace("/", "-")
+    with hide("stdout", "running"):
+        if sudo("puppet module list --color=false 2> /dev/null|grep "+listname).failed:
+            sudo("puppet module install "+name)
