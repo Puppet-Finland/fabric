@@ -55,7 +55,7 @@ def install_puppetlabs_release_package(pc):
     import package
     vars = Vars()
     os = vars.lsbdistcodename
-    package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb")
+    package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc)
 
 @task
 def setup_agent4(pc="1"):
