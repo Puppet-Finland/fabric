@@ -63,7 +63,7 @@ class Vars:
                 if run("which lsb_release").succeeded:
                    return run("lsb_release -cs")
                 else:
-                    # Facter return an empty string here as well
+                    # Facter returns an empty string here as well
                     return ""
 
 class Linux(object):

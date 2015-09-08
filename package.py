@@ -40,13 +40,6 @@ def install(package):
         sudo(vars.os.package_install_cmd % package)
 
 @task
-def upgrade():
-    """Install latest (security) updates"""
-    vars = Vars()
-    sudo(vars.os.package_refresh_cmd)
-    sudo(vars.os.package_upgrade_cmd)
-
-@task
 def autoremove():
     """Remove obsolete packages, such as unused kernel images"""
     vars = Vars()

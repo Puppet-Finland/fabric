@@ -2,7 +2,6 @@ from fabric.api import *
 from vars import *
 import re
 import sys
-import package
 
 ### Generic puppet tasks
 @task
@@ -51,24 +50,27 @@ def install(master=None, environment='production'):
     sudo("puppet config --section agent set environment %s" % environment)
 
 ### Puppet 4 tasks
-@task
 def install_puppetlabs_release_package(pc):
     """Install Puppetlabs apt repo release package"""
+    import package
     vars = Vars()
     os = vars.lsbdistcodename
     package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb")
 
 @task
 def setup_agent4(pc="1"):
+    """Setup Puppet 4 Agent"""
+    import package
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
 
 @task
 def setup_server4(pc="1"):
+    """Setup Puppet 4 server"""
+    import package
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
 
-@task
 def copy_puppet_conf4():
     """Copy over puppet.conf"""
     remote_puppet_conf = "/etc/puppetlabs/puppet/puppet.conf"

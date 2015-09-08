@@ -35,3 +35,16 @@ def add_host_entry(ip, hostname, domain):
     with hide("warnings"):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
+
+@task
+def reboot(really='no'):
+    """Reboot the machine. Use reboot:really=YES to actually reboot."""
+
+    if really == 'YES':
+        sudo("shutdown -r now")
+    else:
+        print("Use reboot:really=YES to actually reboot")
+
+def isTrue(s):
+    """Convert a Yes into True and everything else into False"""
+    return s == "Yes"
