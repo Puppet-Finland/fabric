@@ -18,13 +18,15 @@ def is_installed(package):
             return True
 
 @task
-def download_and_install(url):
-    """Download a package and install it"""
+def download_and_install(url, package_name=None):
+    """Download a package from URL and install it. Use package_name to manually define the name of the installed package and to prevent unnecessary reinstalls."""
     vars = Vars()
     with cd("/tmp"):
         parsed = urlparse(url)
         package_file = re.split("/", parsed.path)[1]
-        package_name = package_file.rpartition(".")[0]
+
+        if not package_name:
+            package_name = package_file.rpartition(".")[0]
 
         if not exists(package_file):
             run("wget "+url)
