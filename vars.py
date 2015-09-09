@@ -1,5 +1,6 @@
 from fabric.api import *
 from fabric.contrib.files import exists
+import re
 
 class Vars:
     """Manage parameters based on the operating system"""
@@ -15,11 +16,13 @@ class Vars:
         self.release_files = { '/etc/fedora-release': { 'osfamily': 'RedHat' },
                                '/etc/redhat-release': { 'osfamily': 'RedHat' } }
 
-        self. lsbdistcodename = self.get_lsbdistcodename()
-
-        osfamily = self.get_osfamily()
+        self.release_file = None
+        self.has_facter = self.has_program("facter")
+        self.has_lsb_release = self.has_program("lsb_release")
+        self.lsbdistcodename = self.get_lsbdistcodename()
 
         # Populate OS-specific parameters
+        osfamily = self.get_osfamily()
         if osfamily == 'Debian':
             self.os = Debian()
             self.osfamily = "Debian"
@@ -30,41 +33,85 @@ class Vars:
             self.os = RedHat()
             self.osfamily = "RedHat"
 
+        self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
+        self.operatingsystemminrelease = self.get_operatingsystemminrelease()
+
+
+    def has_program(self, name):
+        """Check if the node a certain program installed and in PATH"""
+        with hide("everything"), settings(warn_only=True):
+            if run("which "+name).succeeded:
+                return True
+            else:
+                return False
+
     def get_osfamily(self):
         """Detect operating system family"""
-        with hide("everything"), settings(warn_only=True):
-            if run("which facter").succeeded:
+        if self.has_facter:
+            with hide("everything"):
                 return run("facter osfamily")
-            elif run("which lsb_release").succeeded:
+        elif self.has_lsb_release:
+            with hide("everything"):
                 return run("lsb_release -is")
-            else:
-                # While this loop is fairly inefficient, replacing it with a
-                # single Fabric run("ls <filelist>") operation is not a panacea,
-                # either, as its output may include several files, some of which
-                # are preferable. So we'd need a prioritization list to make
-                # sense of the output.
-                for k, v in self.release_files.iteritems():
-                    if exists(k):
-                        return self.release_files[k]['osfamily']
+        else:
+            # While this loop is fairly inefficient, replacing it with a
+            # single Fabric run("ls <filelist>") operation is not a panacea,
+            # either, as its output may include several files, some of which
+            # are preferable. So we'd need a prioritization list to make
+            # sense of the output.
+            for k, v in self.release_files.iteritems():
+                if exists(k):
+                    self.release_file = k
+                    return self.release_files[k]['osfamily']
 
-                # Could not determine the operating system family
-                return ""
+            # Could not determine the operating system family
+            return ""
 
     def get_lsbdistcodename(self):
         """Detect lsbdistcodename"""
         # Try facter and fall back to Pythonic detection if Facter is not
         # present
-        with hide("everything"), settings(warn_only=True):
-            if run("which facter").succeeded:
+        if self.has_facter:
+            with hide("everything"):
                 return run("facter lsbdistcodename")
+        elif self.has_lsb_release:
+            with hide("everything"):
+                return run("lsb_release -cs")
+        else:
+            # Facter returns an empty string here as well
+            return ""
+
+    def get_operatingsystemrelease(self, maj):
+        """Get the operating system release. Used internally."""
+        if maj:
+            fact = "operatingsystemmajrelease"
+            index = 0
+        else:
+            fact = "operatingsystemminrelease"
+            index = 1
+
+        if self.has_facter:
+            with hide("everything"):
+                return run("facter "+fact)
+        elif self.has_lsb_release:
+            fullver = re.split(".", run("lsb_release -rs"))
+            with hide("everything"):
+                return fullver[index]
+        else:
+            with hide("everything"):
+                release = run("cat "+self.release_file)
+            if maj:
+                return re.split("\.", release)[index][-1:]
             else:
-                # The lsb_release command is not available on RedHat-based operating
-                # systems. We can use it on Debian/Ubuntu, though.
-                if run("which lsb_release").succeeded:
-                   return run("lsb_release -cs")
-                else:
-                    # Facter returns an empty string here as well
-                    return ""
+                return re.split("\.", release)[index][-1:]
+
+    def get_operatingsystemmajrelease(self):
+        """Get the major version of the operating system"""
+        return self.get_operatingsystemrelease(maj=True)
+
+    def get_operatingsystemminrelease(self):
+        """Get the minor version of the operating system"""
+        return self.get_operatingsystemrelease(maj=False)
 
 class Linux(object):
     """Parameters for Linux-based operating systems"""
@@ -100,7 +147,7 @@ class RedHat(Linux):
         self.package_refresh_cmd = "yum makecache"
         self.package_upgrade_cmd = "yum update"
         self.package_install_cmd = "yum install %s"
-        self.package_local_install_cmd = "rpm -i %s"
+        self.package_local_install_cmd = "rpm -ivh %s"
 
 class Debian(Linux):
     """Parameters for Debian-based operating systems"""
@@ -118,3 +165,11 @@ class Trusty(Debian):
     """Parameters for Ubuntu Trusty (14.04)"""
     def __init__(self, *args, **kwargs):
         super(Trusty, self).__init__()
+
+@task
+def test():
+    vars = Vars()
+    print "osfamily: "+vars.osfamily
+    print "operatingsystemmajrelease: "+vars.operatingsystemmajrelease
+    print "operatingsystemminrelease: "+vars.operatingsystemminrelease
+    print "lsbdistcodename: "+vars.lsbdistcodename
