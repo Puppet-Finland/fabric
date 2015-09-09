@@ -147,7 +147,6 @@ class Linux(object):
             self.service_status_cmd = "service %s status"
 
         self.default_shell = "/bin/bash"
-        self.default_shell_config = "/etc/bash.bashrc"
         self.default_loginshell_config = "/etc/profile"
 
     def has_systemd(self):
@@ -164,8 +163,10 @@ class RedHat(Linux):
         super(RedHat, self).__init__()
         self.package_refresh_cmd = "yum makecache"
         self.package_upgrade_cmd = "yum update"
-        self.package_install_cmd = "yum install %s"
+        self.package_install_cmd = "yum -y install %s"
         self.package_local_install_cmd = "rpm -ivh %s"
+        self.package_installed_cmd = "rpm -qs"
+        self.default_shell_config = "/etc/bashrc"
 
 class Debian(Linux):
     """Parameters for Debian-based operating systems"""
@@ -173,11 +174,12 @@ class Debian(Linux):
         super(Debian, self).__init__()
         self.package_refresh_cmd = "apt-get update"
         self.package_upgrade_cmd = "apt-get dist-upgrade"
-        self.package_install_cmd = "apt-get install %s"
+        self.package_install_cmd = "apt-get -y install %s"
         self.package_autoremove_cmd = "apt-get autoremove"
         self.package_local_install_cmd = "dpkg -i %s"
         # Using %s after the single quotes does not seem to work
         self.package_installed_cmd = "dpkg-query -Wf'${db:Status-abbrev}'"
+        self.default_shell_config = "/etc/bash.bashrc"
 
 class Trusty(Debian):
     """Parameters for Ubuntu Trusty (14.04)"""
