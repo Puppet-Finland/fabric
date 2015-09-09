@@ -1,4 +1,11 @@
 from fabric.api import *
+from vars import *
+
+def install():
+    """Install Git"""
+    import package
+    vars = Vars()
+    package.install(vars.os.git_package_name)
 
 @task
 def clone(dir, url, reponame=None, submodule=False):

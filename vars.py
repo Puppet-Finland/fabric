@@ -164,9 +164,11 @@ class RedHat(Linux):
         self.package_refresh_cmd = "yum makecache"
         self.package_upgrade_cmd = "yum update"
         self.package_install_cmd = "yum -y install %s"
+        self.package_autoremove_cmd = "yum autoremove"
         self.package_local_install_cmd = "rpm -ivh %s"
         self.package_installed_cmd = "rpm -qs"
         self.default_shell_config = "/etc/bashrc"
+        self.git_package_name = "git"
 
 class Debian(Linux):
     """Parameters for Debian-based operating systems"""
@@ -180,6 +182,7 @@ class Debian(Linux):
         # Using %s after the single quotes does not seem to work
         self.package_installed_cmd = "dpkg-query -Wf'${db:Status-abbrev}'"
         self.default_shell_config = "/etc/bash.bashrc"
+        self.git_package_name = "git"
 
 class Trusty(Debian):
     """Parameters for Ubuntu Trusty (14.04)"""
