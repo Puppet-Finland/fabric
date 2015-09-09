@@ -40,8 +40,11 @@ def add_host_entry(ip, hostname, domain):
 @task
 def set_hostname(hostname):
     """Set hostname"""
-    sudo("echo "+hostname+" > /etc/hostname")
-    sudo("hostname "+hostname)
+    with hide("everything"), settings(warn_only=True):
+        if run("grep "+hostname+" /etc/hostname").failed:
+            sudo("echo "+hostname+" > /etc/hostname")
+        if not hostname == run("hostname"):
+            sudo("hostname "+hostname)
 
 def add_to_path(path):
     """Add a new directory to PATH for the default shell"""
