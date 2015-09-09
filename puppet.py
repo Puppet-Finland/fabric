@@ -55,7 +55,16 @@ def install_puppetlabs_release_package(pc):
     import package
     vars = Vars()
     os = vars.lsbdistcodename
-    package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc)
+
+    if vars.osfamily == "Debian":
+        package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc)
+    elif vars.osfamily == "RedHat":
+        if vars.operatingsystem in ["RedHat", "CentOS", "Scientific"]:
+            oscode = "el"
+        elif vars.operatingsystem == "Fedora":
+            oscode = "fedora"
+        url="https://yum.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+oscode+"-"+vars.operatingsystemmajrelease+".noarch.rpm"
+        package.download_and_install(url, "puppetlabs-release-pc"+pc)
 
 @task
 def setup_agent4(pc="1"):
@@ -65,15 +74,14 @@ def setup_agent4(pc="1"):
     package.install("puppet-agent")
 
 @task
-def setup_server4(pc="1", hostname="puppet", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
+def setup_server4(pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
     import package, util
 
-    master_conf = "files/master.conf"
     try:
         open(master_conf)
     except IOError:
-        print "ERROR: missing puppetmaster config from files/master.conf!"
+        print "ERROR: puppetmaster config ("+master_conf+") not found!"
         sys.exit(1)
 
     install_puppetlabs_release_package(pc)
@@ -96,6 +104,6 @@ def add_forge_module(name):
     """Add a forge module"""
     # puppet module list shows dashes instead of slashes due to historic reasons
     listname = name.replace("/", "-")
-    with hide("stdout", "running"):
+    with hide("everything"), settings(warn_only=True):
         if sudo("puppet module list --color=false 2> /dev/null|grep "+listname).failed:
             sudo("puppet module install "+name)
