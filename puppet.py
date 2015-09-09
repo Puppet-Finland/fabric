@@ -76,7 +76,7 @@ def setup_agent4(pc="1"):
 @task
 def setup_server4(pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
-    import package, util
+    import package, util, git
 
     try:
         open(master_conf)
@@ -92,6 +92,8 @@ def setup_server4(pc="1", hostname="puppet", master_conf="files/master.conf", fo
 
     for module in forge_modules:
         add_forge_module(module)
+
+    git.install()
 
 def copy_puppet_conf4(localfile="files/agent.conf"):
     """Copy over puppet.conf"""
