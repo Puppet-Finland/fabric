@@ -29,7 +29,8 @@ def download_and_install(url, package_name=None):
             package_name = package_file.rpartition(".")[0]
 
         if not exists(package_file):
-            run("wget "+url)
+            # wget is not universally available out of the box
+            run("curl -Os "+url)
         if not is_installed(package_name):
             sudo(vars.os.package_local_install_cmd % package_file)
 
