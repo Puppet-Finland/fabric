@@ -33,6 +33,7 @@ class Vars:
             self.os = RedHat()
             self.osfamily = "RedHat"
 
+        self.operatingsystem = self.get_operatingsystem()
         self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
         self.operatingsystemminrelease = self.get_operatingsystemminrelease()
 
@@ -45,11 +46,20 @@ class Vars:
             else:
                 return False
 
+    def get_fact(self, fact):
+        """Get a fact value from facter. Used internally."""
+        with hide("everything"):
+            return run("facter "+fact)
+
+    def get_release_file_content(self):
+        """Get the content of the release file as string"""
+        with hide("everything"):
+            return run("cat "+self.release_file)
+
     def get_osfamily(self):
         """Detect operating system family"""
         if self.has_facter:
-            with hide("everything"):
-                return run("facter osfamily")
+            return self.get_fact("osfamily")
         elif self.has_lsb_release:
             with hide("everything"):
                 return run("lsb_release -is")
@@ -72,8 +82,7 @@ class Vars:
         # Try facter and fall back to Pythonic detection if Facter is not
         # present
         if self.has_facter:
-            with hide("everything"):
-                return run("facter lsbdistcodename")
+            return self.get_fact("lsbdistcodename")
         elif self.has_lsb_release:
             with hide("everything"):
                 return run("lsb_release -cs")
@@ -91,19 +100,28 @@ class Vars:
             index = 1
 
         if self.has_facter:
-            with hide("everything"):
-                return run("facter "+fact)
+            return self.get_fact(fact)
         elif self.has_lsb_release:
             fullver = re.split(".", run("lsb_release -rs"))
             with hide("everything"):
                 return fullver[index]
         else:
-            with hide("everything"):
-                release = run("cat "+self.release_file)
+            release = self.get_release_file_content()
             if maj:
                 return re.split("\.", release)[index][-1:]
             else:
                 return re.split("\.", release)[index][-1:]
+
+    def get_operatingsystem(self):
+        """Get the operating system name"""
+        if self.has_facter:
+            return self.get_fact("operatingsystem")
+        elif self.has_lsb_release:
+            with hide("everything"):
+                return run("lsb_release -is")
+        else:
+            release = self.get_release_file_content()
+            return re.split(" ", release)[0]
 
     def get_operatingsystemmajrelease(self):
         """Get the major version of the operating system"""
@@ -170,6 +188,7 @@ class Trusty(Debian):
 def test():
     vars = Vars()
     print "osfamily: "+vars.osfamily
+    print "operatingsystem: "+vars.operatingsystem
     print "operatingsystemmajrelease: "+vars.operatingsystemmajrelease
     print "operatingsystemminrelease: "+vars.operatingsystemminrelease
     print "lsbdistcodename: "+vars.lsbdistcodename
