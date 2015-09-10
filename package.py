@@ -1,5 +1,6 @@
 from fabric.api import *
 from urlparse import urlparse
+from fabric.contrib.files import exists
 import os
 import re
 
