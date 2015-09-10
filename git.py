@@ -1,10 +1,10 @@
 from fabric.api import *
-from vars import *
 
+@task
 def install():
     """Install Git"""
-    import package
-    vars = Vars()
+    import package, vars
+    vars = vars.Vars()
     package.install(vars.os.git_package_name)
 
 @task

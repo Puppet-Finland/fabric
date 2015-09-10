@@ -1,10 +1,10 @@
 from fabric.api import *
-from vars import *
 
 @task
 def simple():
     """Install latest (security) updates"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     sudo(vars.os.package_refresh_cmd)
     sudo(vars.os.package_upgrade_cmd)
 

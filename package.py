@@ -1,14 +1,13 @@
 from fabric.api import *
-from vars import *
 from urlparse import urlparse
-from vars import *
 import os
 import re
 
 @task
 def is_installed(package):
     """Check if package is installed"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     # This will work with "package.<extension> and "package"
     package_name = os.path.splitext(package)[0]
     with quiet(), settings(warn_only=True):
@@ -20,7 +19,8 @@ def is_installed(package):
 @task
 def download_and_install(url, package_name=None):
     """Download a package from URL and install it. Use package_name to manually define the name of the installed package and to prevent unnecessary reinstalls."""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     with cd("/tmp"):
         parsed = urlparse(url)
         package_file = re.split("/", parsed.path)[1]
@@ -37,7 +37,8 @@ def download_and_install(url, package_name=None):
 @task
 def install(package):
     """Install a package from the repositories"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     if not is_installed(package):
         sudo(vars.os.package_refresh_cmd)
         sudo(vars.os.package_install_cmd % package)
@@ -45,6 +46,7 @@ def install(package):
 @task
 def autoremove():
     """Remove obsolete packages, such as unused kernel images"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     with settings(hide("user", "stdout")):
         sudo(vars.os.package_autoremove_cmd)

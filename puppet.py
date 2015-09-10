@@ -1,5 +1,4 @@
 from fabric.api import *
-from vars import *
 import re
 import sys
 
@@ -52,8 +51,8 @@ def install(master=None, environment='production'):
 ### Puppet 4 tasks
 def install_puppetlabs_release_package(pc):
     """Install Puppetlabs apt repo release package"""
-    import package
-    vars = Vars()
+    import package, vars
+    vars = vars.Vars()
     os = vars.lsbdistcodename
 
     if vars.osfamily == "Debian":

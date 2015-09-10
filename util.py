@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
 from datetime import datetime
-from vars import *
 
 def getisotime():
     """Convenience method to get current UTC time in yyyymmddhhmm format"""
@@ -21,7 +20,8 @@ def df():
 @task
 def install_sudo():
     """Install sudo, if it's not present"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     with settings(warn_only=True):
         if run("which sudo").failed:
             run(vars.os.package_install_cmd % "sudo")
@@ -49,8 +49,8 @@ def set_hostname(hostname):
 def add_to_path(path):
     """Add a new directory to PATH for the default shell"""
     from fabric.contrib.files import append
-
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     for file in [ vars.os.default_shell_config, vars.os.default_loginshell_config ]:
         append(file, "export PATH=$PATH:"+path, use_sudo=True)
 

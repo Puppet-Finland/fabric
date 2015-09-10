@@ -191,6 +191,7 @@ class Trusty(Debian):
 
 @task
 def test():
+    """Verify that operating system variables are functioning correctly"""
     vars = Vars()
     print "osfamily: "+vars.osfamily
     print "operatingsystem: "+vars.operatingsystem
