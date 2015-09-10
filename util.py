@@ -33,7 +33,7 @@ def add_host_entry(ip, hostname, domain):
 
     # Only add entry if it does not exist already. We don't want warnings about
     # grep not finding the entry, as that's to be expected.
-    with hide("warnings"):
+    with hide("warnings"), settings(warn_only=True):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
 
