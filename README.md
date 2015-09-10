@@ -121,6 +121,7 @@ Then create the private fabfile.py, which, at minimum, can look like this:
 
     from fabric.api import *
     from common import *
+    env.roledefs = hostinfo.load_roledefs()
 
 The directory structure should look like this:
 
