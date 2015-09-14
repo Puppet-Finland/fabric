@@ -73,7 +73,7 @@ def setup_agent4(pc="1"):
     package.install("puppet-agent")
 
 @task
-def setup_server4(pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
+def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
     import package, util, git
 
@@ -87,7 +87,9 @@ def setup_server4(pc="1", hostname="puppet", master_conf="files/master.conf", fo
     package.install("puppetserver")
     copy_puppet_conf4(master_conf)
     util.add_to_path("/opt/puppetlabs/bin")
-    util.set_hostname(hostname)
+    util.set_hostname(hostname + "." + domain)
+    # "facter fqdn" return a silly name on EC2 without this
+    util.add_host_entry("127.0.1.1", hostname, domain)
 
     for module in forge_modules:
         add_forge_module(module)
