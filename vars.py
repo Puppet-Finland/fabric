@@ -132,7 +132,7 @@ class Vars:
             return self.get_fact(fact)
         elif self.has_lsb_release:
             with hide("everything"):
-                fullver = re.split(".", run("lsb_release -rs"))
+                fullver = re.split("\.", run("lsb_release -rs"))
                 return fullver[index]
         else:
             release = self.get_release_file_content()
