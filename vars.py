@@ -6,6 +6,17 @@ class Vars:
     """Manage parameters based on the operating system"""
 
     def __init__(self, *args, **kwargs):
+        """Load and cache host information/facts"""
+        if 'hostinfo' not in env:
+            env['hostinfo'] = {}
+
+        if env.host_string in env['hostinfo']:
+            self.set_hostinfo_from_cache()
+        else:
+            self.set_hostinfo()
+
+    def set_hostinfo(self):
+        """Set hostinfo for this object"""
         # Map release files to operating system names and operating system
         # families. This approach has been adapted from
         # facter/operatingsystem/linux.rb and would be redundant _if_ every OS
@@ -37,6 +48,21 @@ class Vars:
         self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
         self.operatingsystemminrelease = self.get_operatingsystemminrelease()
 
+        # Cache this node's information for later use
+        env['hostinfo'][env.host_string] = self
+
+    def set_hostinfo_from_cache(self):
+        """Set host information from the cache in env dictionary"""
+        print "NOTICE: using cached hostinfo"
+        cached = env['hostinfo'][env.host_string]
+        self.has_facter = cached.has_facter
+        self.has_lsb_release = cached.has_lsb_release
+        self.lsbdistcodename = cached.lsbdistcodename
+        self.os = cached.os
+        self.osfamily = cached.osfamily
+        self.operatingsystem = cached.operatingsystem
+        self.operatingsystemmajrelease = cached.operatingsystemmajrelease
+        self.operatingsystemminrelease = cached.operatingsystemminrelease
 
     def has_program(self, name):
         """Check if the node a certain program installed and in PATH"""
@@ -102,8 +128,8 @@ class Vars:
         if self.has_facter:
             return self.get_fact(fact)
         elif self.has_lsb_release:
-            fullver = re.split(".", run("lsb_release -rs"))
             with hide("everything"):
+                fullver = re.split(".", run("lsb_release -rs"))
                 return fullver[index]
         else:
             release = self.get_release_file_content()
