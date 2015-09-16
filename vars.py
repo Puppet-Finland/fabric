@@ -43,6 +43,9 @@ class Vars:
         elif osfamily == 'RedHat':
             self.os = RedHat()
             self.osfamily = "RedHat"
+        else:
+            print "ERROR: unsupported OS family!"
+            sys.exit(1)
 
         self.operatingsystem = self.get_operatingsystem()
         self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
