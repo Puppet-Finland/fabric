@@ -46,6 +46,7 @@ def set_hostname(hostname):
         if not hostname == run("hostname"):
             sudo("hostname "+hostname)
 
+@task
 def add_to_path(path):
     """Add a new directory to PATH for the default shell"""
     from fabric.contrib.files import append

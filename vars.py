@@ -56,7 +56,6 @@ class Vars:
 
     def set_hostinfo_from_cache(self):
         """Set host information from the cache in env dictionary"""
-        print "NOTICE: using cached hostinfo"
         cached = env['hostinfo'][env.host_string]
         self.has_facter = cached.has_facter
         self.has_lsb_release = cached.has_lsb_release

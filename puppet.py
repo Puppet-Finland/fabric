@@ -7,7 +7,7 @@ import sys
 def run_agent(noop="True", onlychanges="True"):
     """Run puppet in normal or no-operation mode"""
     with settings(hide("status"), hide("running")):
-        basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false"
+        basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false --no-splay"
         if onlychanges.lower() == "true":
             filtercommand = "| grep -v \"Info:\""
             env.parallel=True
@@ -66,11 +66,27 @@ def install_puppetlabs_release_package(pc):
         package.download_and_install(url, "puppetlabs-release-pc"+pc)
 
 @task
-def setup_agent4(pc="1"):
+def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-agent.conf"):
     """Setup Puppet 4 agent"""
-    import package
+    import package, util
+
+    # Automatically determine hostname and domain, if they're not given on the
+    # command-line
+    if not hostname:
+        hostname = re.split("\.", env.host)[0]
+    if not domain:
+        domain=""
+        for item in re.split("\.", env.host)[1:]:
+            domain = domain + "." + item
+        domain = domain.lstrip(".")
+
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
+    copy_puppet_conf4(localfile=localfile)
+    util.set_hostname(hostname + "." + domain)
+    util.add_host_entry("127.0.1.1", hostname, domain)
+    util.add_to_path("/opt/puppetlabs/bin")
+    run_agent(noop="True", onlychanges="False")
 
 @task
 def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
@@ -96,7 +112,7 @@ def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/master.c
 
     git.install()
 
-def copy_puppet_conf4(localfile="files/agent.conf"):
+def copy_puppet_conf4(localfile="files/puppet-agent.conf"):
     """Copy over puppet.conf"""
     remote_puppet_conf = "/etc/puppetlabs/puppet/puppet.conf"
     put(localfile, remote_puppet_conf, use_sudo=True, mode="0644")
