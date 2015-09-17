@@ -89,7 +89,7 @@ def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-age
     run_agent(noop="True", onlychanges="False")
 
 @task
-def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
+def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/puppet-master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
     import package, util, git
 
