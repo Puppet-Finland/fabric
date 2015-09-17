@@ -107,6 +107,45 @@ name and value joined by underscore , e.g.
 A special role, *role_any*, includes all hosts. This is solely to allow easily 
 running tasks on all hosts when necessary.
 
+# Managing private fabric tasks
+
+One way for public and private Fabric tasks to coexists is to create a private
+Git repository and add this repository there as a submodule:
+
+    $ mkdir fabric-private
+    $ cd fabric-private
+    $ git init
+    $ git submodule add https://github.com/Puppet-Finland/fabric.git common
+
+Then create the private fabfile.py, which, at minimum, can look like this:
+
+    from fabric.api import *
+    from common import *
+    env.roledefs = hostinfo.load_roledefs()
+
+The directory structure should look like this:
+
+    fabric-private/
+        ├── common
+        │   ├── fabfile.py
+        │   ├── git.py
+        │   ├── hostinfo.py
+        │   ├── __init__.py
+        │   ├── LICENSE
+        │   ├── package.py
+        │   ├── puppet.py
+        │   ├── README.md
+        │   ├── service.py
+        │   ├── settings.ini.sample
+        │   ├── upcloud.py
+        │   ├── upgrade.py
+        │   ├── util.py
+        │   └── vars.py
+        └── fabfile.py
+
+Now, if you run "fab -l" you will see private tasks from fabfile.py, as well as
+public tasks from common/*.py.
+
 # Common Fabric tasks
 
 ## List available commands/tasks:

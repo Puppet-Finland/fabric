@@ -1,14 +1,14 @@
 from fabric.api import *
-from vars import *
 from urlparse import urlparse
-from vars import *
+from fabric.contrib.files import exists
 import os
 import re
 
 @task
 def is_installed(package):
     """Check if package is installed"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     # This will work with "package.<extension> and "package"
     package_name = os.path.splitext(package)[0]
     with quiet(), settings(warn_only=True):
@@ -18,23 +18,28 @@ def is_installed(package):
             return True
 
 @task
-def download_and_install(url):
-    """Download a package and install it"""
-    vars = Vars()
+def download_and_install(url, package_name=None):
+    """Download a package from URL and install it. Use package_name to manually define the name of the installed package and to prevent unnecessary reinstalls."""
+    import vars
+    vars = vars.Vars()
     with cd("/tmp"):
         parsed = urlparse(url)
         package_file = re.split("/", parsed.path)[1]
-        package_name = package_file.rpartition(".")[0]
+
+        if not package_name:
+            package_name = package_file.rpartition(".")[0]
 
         if not exists(package_file):
-            run("wget "+url)
+            # wget is not universally available out of the box
+            run("curl -Os "+url)
         if not is_installed(package_name):
             sudo(vars.os.package_local_install_cmd % package_file)
 
 @task
 def install(package):
     """Install a package from the repositories"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     if not is_installed(package):
         sudo(vars.os.package_refresh_cmd)
         sudo(vars.os.package_install_cmd % package)
@@ -42,6 +47,7 @@ def install(package):
 @task
 def autoremove():
     """Remove obsolete packages, such as unused kernel images"""
-    vars = Vars()
+    import vars
+    vars = vars.Vars()
     with settings(hide("user", "stdout")):
         sudo(vars.os.package_autoremove_cmd)

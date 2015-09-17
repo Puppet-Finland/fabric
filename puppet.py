@@ -1,6 +1,4 @@
 from fabric.api import *
-from vars import *
-import re
 import sys
 
 ### Generic puppet tasks
@@ -8,7 +6,7 @@ import sys
 def run_agent(noop="True", onlychanges="True"):
     """Run puppet in normal or no-operation mode"""
     with settings(hide("status"), hide("running")):
-        basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false"
+        basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false --no-splay"
         if onlychanges.lower() == "true":
             filtercommand = "| grep -v \"Info:\""
             env.parallel=True
@@ -52,27 +50,89 @@ def install(master=None, environment='production'):
 ### Puppet 4 tasks
 def install_puppetlabs_release_package(pc):
     """Install Puppetlabs apt repo release package"""
-    import package
-    vars = Vars()
+    import package, vars
+    vars = vars.Vars()
     os = vars.lsbdistcodename
-    package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb")
+
+    if vars.osfamily == "Debian":
+        package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc)
+    elif vars.osfamily == "RedHat":
+        if vars.operatingsystem in ["RedHat", "CentOS", "Scientific"]:
+            oscode = "el"
+        elif vars.operatingsystem == "Fedora":
+            oscode = "fedora"
+        url="https://yum.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+oscode+"-"+vars.operatingsystemmajrelease+".noarch.rpm"
+        package.download_and_install(url, "puppetlabs-release-pc"+pc)
 
 @task
-def setup_agent4(pc="1"):
+def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf"):
     """Setup Puppet 4 agent"""
-    import package
+    import package, util
+
+    if not hostname:
+        hostname = util.get_hostname()
+    if not domain:
+        domain = util.get_domain()
+
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
+    util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
+    util.set_hostname(hostname + "." + domain)
+    util.add_host_entry("127.0.1.1", hostname, domain)
+    util.add_to_path("/opt/puppetlabs/bin")
+    run_agent(noop="True", onlychanges="False")
 
 @task
-def setup_server4(pc="1"):
+def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
-    import package
+    import package, util, git
+
+    # Local files to copy over
+    local_master_conf = "files/puppet-master.conf"
+    remote_master_conf = "/etc/puppetlabs/puppet/puppet.conf"
+    local_hiera_yaml = "files/hiera.yaml"
+    remote_hiera_yaml = "/etc/puppetlabs/code/hiera.yaml"
+
+    # Verify that all the local files are in place
+    try:
+        open(local_master_conf)
+        open(local_hiera_yaml)
+    except IOError:
+        print "ERROR: some local config files were missing!"
+        sys.exit(1)
+
+    # Autodetect hostname and domain from env.host, if they're not overridden
+    # with method parameters
+    if not hostname:
+        hostname = util.get_hostname()
+    if not domain:
+        domain = util.get_domain()
+
+    # Start the install
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
+    util.put_and_chown(local_master_conf, remote_master_conf)
+    util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
+    util.add_to_path("/opt/puppetlabs/bin")
+    util.set_hostname(hostname + "." + domain)
+    # "facter fqdn" return a silly name on EC2 without this
+    util.add_host_entry("127.0.1.1", hostname, domain)
 
-def copy_puppet_conf4():
-    """Copy over puppet.conf"""
-    remote_puppet_conf = "/etc/puppetlabs/puppet/puppet.conf"
-    put("files/puppet.conf", remote_puppet_conf, use_sudo=True, mode="0644")
-    sudo("chown root:root "+remote_puppet_conf)
+    # Add modules from Puppet Forge. These should in my experience be limited to
+    # those which provide new types and providers. In particular puppetlabs'
+    # modules which control some daemon (puppetdb, postgresql, mysql) are
+    # extremely complex, very prone to breakage and nasty to debug. 
+    for module in forge_modules:
+        add_forge_module(module)
+
+    # Add Git submodules
+    git.install()
+
+@task
+def add_forge_module(name):
+    """Add a forge module"""
+    # puppet module list shows dashes instead of slashes due to historic reasons
+    listname = name.replace("/", "-")
+    with hide("everything"), settings(warn_only=True):
+        if sudo("puppet module list --color=false 2> /dev/null|grep "+listname).failed:
+            sudo("puppet module install "+name)
