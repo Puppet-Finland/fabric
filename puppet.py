@@ -65,7 +65,7 @@ def install_puppetlabs_release_package(pc):
         package.download_and_install(url, "puppetlabs-release-pc"+pc)
 
 @task
-def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-agent.conf"):
+def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf"):
     """Setup Puppet 4 agent"""
     import package, util
 
@@ -76,46 +76,57 @@ def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-age
 
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
-    copy_puppet_conf4(localfile=localfile)
+    util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
     util.set_hostname(hostname + "." + domain)
     util.add_host_entry("127.0.1.1", hostname, domain)
     util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="True", onlychanges="False")
 
 @task
-def setup_server4(hostname=None, domain=None, pc="1", master_conf="files/puppet-master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
+def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
     import package, util, git
 
+    # Local files to copy over
+    local_master_conf = "files/puppet-master.conf"
+    remote_master_conf = "/etc/puppetlabs/puppet/puppet.conf"
+    local_hiera_yaml = "files/hiera.yaml"
+    remote_hiera_yaml = "/etc/puppetlabs/code/hiera.yaml"
+
+    # Verify that all the local files are in place
+    try:
+        open(local_master_conf)
+        open(local_hiera_yaml)
+    except IOError:
+        print "ERROR: some local config files were missing!"
+        sys.exit(1)
+
+    # Autodetect hostname and domain from env.host, if they're not overridden
+    # with method parameters
     if not hostname:
         hostname = util.get_hostname()
     if not domain:
         domain = util.get_domain()
 
-    try:
-        open(master_conf)
-    except IOError:
-        print "ERROR: puppetmaster config ("+master_conf+") not found!"
-        sys.exit(1)
-
+    # Start the install
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
-    copy_puppet_conf4(master_conf)
+    util.put_and_chown(local_master_conf, remote_master_conf)
+    util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
     util.add_host_entry("127.0.1.1", hostname, domain)
 
+    # Add modules from Puppet Forge. These should in my experience be limited to
+    # those which provide new types and providers. In particular puppetlabs'
+    # modules which control some daemon (puppetdb, postgresql, mysql) are
+    # extremely complex, very prone to breakage and nasty to debug. 
     for module in forge_modules:
         add_forge_module(module)
 
+    # Add Git submodules
     git.install()
-
-def copy_puppet_conf4(localfile="files/puppet-agent.conf"):
-    """Copy over puppet.conf"""
-    remote_puppet_conf = "/etc/puppetlabs/puppet/puppet.conf"
-    put(localfile, remote_puppet_conf, use_sudo=True, mode="0644")
-    sudo("chown root:root "+remote_puppet_conf)
 
 @task
 def add_forge_module(name):
