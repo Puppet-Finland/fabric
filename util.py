@@ -28,6 +28,12 @@ def install_sudo():
             run(vars.os.package_install_cmd % "sudo")
 
 @task
+def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"):
+    """Put a file to remote server and chown it"""
+    put(localfile, remotefile, use_sudo=True, mode=mode)
+    sudo("chown "+owner+":"+group+" "+remotefile)
+
+@task
 def add_host_entry(ip, hostname, domain):
     """Add an entry to /etc/hosts"""
     host_line = ip+" "+hostname+"."+domain+" "+hostname
