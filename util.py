@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
 from datetime import datetime
+import re
 
 def getisotime():
     """Convenience method to get current UTC time in yyyymmddhhmm format"""
@@ -36,6 +37,17 @@ def add_host_entry(ip, hostname, domain):
     with hide("warnings"), settings(warn_only=True):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
+
+def get_hostname():
+    """Get hostname part of the current host"""
+    return re.split("\.", env.host)[0]
+
+def get_domain():
+    """Get domain part of the current host"""
+    domain=""
+    for item in re.split("\.", env.host)[1:]:
+        domain = domain + "." + item
+    return domain.lstrip(".")
 
 @task
 def set_hostname(hostname):

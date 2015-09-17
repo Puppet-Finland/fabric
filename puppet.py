@@ -1,5 +1,4 @@
 from fabric.api import *
-import re
 import sys
 
 ### Generic puppet tasks
@@ -70,15 +69,10 @@ def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-age
     """Setup Puppet 4 agent"""
     import package, util
 
-    # Automatically determine hostname and domain, if they're not given on the
-    # command-line
     if not hostname:
-        hostname = re.split("\.", env.host)[0]
+        hostname = util.get_hostname()
     if not domain:
-        domain=""
-        for item in re.split("\.", env.host)[1:]:
-            domain = domain + "." + item
-        domain = domain.lstrip(".")
+        domain = util.get_domain()
 
     install_puppetlabs_release_package(pc)
     package.install("puppet-agent")
@@ -89,9 +83,14 @@ def setup_agent4(hostname=None, domain=None, pc="1", localfile="files/puppet-age
     run_agent(noop="True", onlychanges="False")
 
 @task
-def setup_server4(domain, pc="1", hostname="puppet", master_conf="files/puppet-master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
+def setup_server4(hostname=None, domain=None, pc="1", master_conf="files/puppet-master.conf", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
     import package, util, git
+
+    if not hostname:
+        hostname = util.get_hostname()
+    if not domain:
+        domain = util.get_domain()
 
     try:
         open(master_conf)
