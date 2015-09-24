@@ -92,6 +92,8 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     remote_master_conf = "/etc/puppetlabs/puppet/puppet.conf"
     local_hiera_yaml = "files/hiera.yaml"
     remote_hiera_yaml = "/etc/puppetlabs/code/hiera.yaml"
+    local_fileserver_conf = "files/fileserver.conf"
+    remote_fileserver_conf = "/etc/puppetlabs/puppet/fileserver.conf"
 
     # Verify that all the local files are in place
     try:
@@ -113,6 +115,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     package.install("puppetserver")
     util.put_and_chown(local_master_conf, remote_master_conf)
     util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
+    util.put_and_chown(local_fileserver_conf, remote_fileserver_conf)
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
