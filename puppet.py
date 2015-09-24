@@ -1,4 +1,5 @@
 from fabric.api import *
+from fabric.contrib.files import exists
 import sys
 
 ### Generic puppet tasks
@@ -88,12 +89,18 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     import package, util, git
 
     # Local files to copy over
+    basedir = "/etc/puppetlabs"
     local_master_conf = "files/puppet-master.conf"
-    remote_master_conf = "/etc/puppetlabs/puppet/puppet.conf"
+    remote_master_conf = basedir+"/puppet/puppet.conf"
     local_hiera_yaml = "files/hiera.yaml"
-    remote_hiera_yaml = "/etc/puppetlabs/code/hiera.yaml"
+    remote_hiera_yaml = basedir+"/code/hiera.yaml"
     local_fileserver_conf = "files/fileserver.conf"
-    remote_fileserver_conf = "/etc/puppetlabs/puppet/fileserver.conf"
+    remote_fileserver_conf = basedir+"/puppet/fileserver.conf"
+    local_environments = "files/environments"
+    remote_codedir = basedir+"/code"
+    local_gitignore = "files/gitignore"
+    remote_gitignore = basedir+"/.gitignore"
+    modules_dir = basedir+"/code/environments/production/modules"
 
     # Verify that all the local files are in place
     try:
@@ -116,10 +123,14 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     util.put_and_chown(local_master_conf, remote_master_conf)
     util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
     util.put_and_chown(local_fileserver_conf, remote_fileserver_conf)
+    util.put_and_chown(local_gitignore, remote_gitignore)
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
     util.add_host_entry("127.0.1.1", hostname, domain)
+
+    # Copy over template environments
+    util.put_and_chown(local_environments, remote_codedir)
 
     # Add modules from Puppet Forge. These should in my experience be limited to
     # those which provide new types and providers. In particular puppetlabs'
@@ -128,8 +139,13 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     for module in forge_modules:
         add_forge_module(module)
 
-    # Add Git submodules
+    # Setup Git
     git.install()
+    git.init(basedir)
+    if not exists(modules_dir):
+        sudo("mkdir "+modules_dir)
+    git.init(modules_dir)
+    git.add_submodules(basedir=modules_dir)
 
 @task
 def add_forge_module(name):

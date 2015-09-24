@@ -58,3 +58,9 @@ def add_submodules(basedir, file="files/git-submodules"):
                 name = None
 
             add_submodule(url, basedir, name)
+
+@task
+def init(dir):
+    with cd(dir):
+        if not exists("./.git"):
+            sudo("git init")

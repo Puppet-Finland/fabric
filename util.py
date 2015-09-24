@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
+from fabric.contrib.files import exists
 from datetime import datetime
 import re
+import os
 
 def getisotime():
     """Convenience method to get current UTC time in yyyymmddhhmm format"""
@@ -30,8 +32,18 @@ def install_sudo():
 @task
 def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"):
     """Put a file to remote server and chown it"""
-    put(localfile, remotefile, use_sudo=True, mode=mode)
-    sudo("chown "+owner+":"+group+" "+remotefile)
+    # Configure the exists() check differently depending on whether we're
+    # copying over a file or a directory.
+    with hide("everything"), settings(warn_only=True):
+        if local("test -d "+localfile).succeeded:
+            target = remotefile+"/"+os.path.basename(localfile)
+        else:
+            target = remotefile
+
+    # Only copy things that are not already there
+    if not exists(target):
+        put(localfile, remotefile, use_sudo=True, mode=mode)
+        sudo("chown "+owner+":"+group+" "+remotefile)
 
 @task
 def add_host_entry(ip, hostname, domain):
