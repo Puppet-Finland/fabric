@@ -18,7 +18,7 @@ def is_installed(package):
             return True
 
 @task
-def download_and_install(url, package_name=None):
+def download_and_install(url, package_name=None, proxy_url=None):
     """Download a package from URL and install it. Use package_name to manually define the name of the installed package and to prevent unnecessary reinstalls."""
     import vars
     vars = vars.Vars()
@@ -31,7 +31,9 @@ def download_and_install(url, package_name=None):
 
         if not exists(package_file):
             # wget is not universally available out of the box
-            run("curl -Os "+url)
+            if proxy_url: cmd = "curl -Os -x "+proxy_url+" "+url
+            else:         cmd = "curl -Os "+url
+            run(cmd)
         if not is_installed(package_name):
             sudo(vars.os.package_local_install_cmd % package_file)
 
