@@ -30,7 +30,7 @@ def install_sudo():
             run(vars.os.package_install_cmd % "sudo")
 
 @task
-def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"):
+def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root", overwrite=True):
     """Put a file to remote server and chown it"""
     # Configure the exists() check differently depending on whether we're
     # copying over a file or a directory.
@@ -41,7 +41,7 @@ def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"
             target = remotefile
 
     # Only copy things that are not already there
-    if not exists(target):
+    if not exists(target) or overwrite:
         put(localfile, remotefile, use_sudo=True, mode=mode)
         sudo("chown "+owner+":"+group+" "+remotefile)
 
