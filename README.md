@@ -34,7 +34,7 @@ Adding the categories to hiera.yaml allows grouping the nodes in Puppet also:
     :backends:
     - yaml
     :yaml:
-        :datadir: /etc/puppet/environments/%{::environment}/hiera
+        :datadir: /etc/puppetlabs/code/environments/%{::environment}/hieradata
     :hierarchy:
         - "nodes/%{::fqdn}"
         - "connectivity/%{::connectivity}"
@@ -52,6 +52,7 @@ it looks like this:
 
     [puppet]
     puppet_tags = role, importance, admin, connectivity
+    nodes_dir = /etc/puppetlabs/code/environments/production/hieradata/nodes
 
 It may be useful to then create a Fabric configuration file, $HOME/.fabricrc, 
 with contents such as this:
