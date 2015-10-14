@@ -86,7 +86,7 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
 @task
 def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
-    import package, util, git
+    import package, util, git, service
 
     # Local files to copy over
     basedir = "/etc/puppetlabs"
@@ -146,6 +146,10 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
         sudo("mkdir "+modules_dir)
     git.init(modules_dir)
     git.add_submodules(basedir=modules_dir)
+
+    # Start puppetserver to generate the CA and server certificates/keys
+    service.start("puppetserver")
+    run_agent(noop=False)
 
 @task
 def add_forge_module(name):
