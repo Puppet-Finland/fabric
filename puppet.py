@@ -149,7 +149,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
 
     # Start puppetserver to generate the CA and server certificates/keys
     service.start("puppetserver")
-    run_agent(noop=False)
+    run_agent(noop="False")
 
 @task
 def add_forge_module(name):
