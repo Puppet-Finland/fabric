@@ -159,3 +159,19 @@ def add_forge_module(name):
     with hide("everything"), settings(warn_only=True):
         if sudo("puppet module list --color=false 2> /dev/null|grep "+listname).failed:
             sudo("puppet module install "+name)
+
+@task
+def resolve_aptitude_conflicts():
+    """Clear package conflicts in aptitude due to Puppet 3->4 migration""" 
+
+    # Installation of Puppetlabs' Puppet 4 packages on top of older Puppet 3 
+    # package seems to leave aptitude's package selections in a limbo. In 
+    # practice the puppet-agent package from Puppet 4 conflicts with several 
+    # other packages that are marked for installation, but no actually 
+    # installed. Manually resolving this issue would be tiresome, so better do 
+    # it here.
+    #
+    # The ":" after the package name means that any actions (install, remove, 
+    # hold, etc.) set in aptitude are cancelled.
+    #
+    sudo("aptitude install augeas-lenses: ruby-augeas: libaugeas-ruby1.8: libaugeas-ruby1.9.1: libaugeas0: libaugeas-ruby: puppet: puppet-common: facter:")
