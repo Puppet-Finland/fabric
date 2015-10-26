@@ -152,6 +152,24 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     run_agent(noop="False")
 
 @task
+@serial
+def migrate_node(proxy_url=None):
+    """Migrate node from Puppet 3.x to 4.x"""
+    import package, puppet, vars
+    vars = vars.Vars()
+    package.remove("puppet facter")
+    sudo("rm -f /etc/apt/sources.list.d/puppetlabs.list")
+    if exists("/var/lib/puppet"):
+        sudo("mv /var/lib/puppet /var/lib/puppet.old.3")
+    if exists("/etc/puppet"):
+        sudo("mv /etc/puppet /etc/puppet.old.3")
+    puppet.setup_agent4(proxy_url=proxy_url)
+
+    if vars.osfamily == 'Debian':
+        package.autoremove()
+        puppet.resolve_aptitude_conflicts()
+
+@task
 def add_forge_module(name):
     """Add a forge module"""
     # puppet module list shows dashes instead of slashes due to historic reasons
