@@ -47,6 +47,14 @@ def install(package):
         sudo(vars.os.package_install_cmd % package)
 
 @task
+def remove(package):
+    """Remove a package that may or may not be installed"""
+    import vars
+    vars = vars.Vars()
+    sudo(vars.os.package_remove_cmd % package)
+
+
+@task
 def autoremove():
     """Remove obsolete packages, such as unused kernel images"""
     import vars
