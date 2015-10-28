@@ -117,6 +117,10 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     if not domain:
         domain = util.get_domain()
 
+    # Ensure that clock is correct before doing anything else, like creating SSL 
+    # certificates.
+    util.set_clock()
+
     # Start the install
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
