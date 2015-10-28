@@ -11,6 +11,13 @@ def getisotime():
     return ct.strftime("%Y%m%d%H%M")
 
 @task
+def set_clock():
+    """Set clock on the server using ntpdate"""
+    import package
+    package.install("ntpdate")
+    sudo("ntpdate 0.fi.pool.ntp.org 1.fi.pool.ntp.org 2.fi.pool.ntp.org")
+
+@task
 def uname():
     """Show kernel version"""
     run("uname -a")
