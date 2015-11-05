@@ -65,6 +65,18 @@ def add_host_entry(ip, hostname, domain):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
 
+@task
+def add_host_entries(hosts_file=None):
+    """Add entries from local hosts file to a remote hosts file"""
+    from fabric.contrib.files import append
+    if hosts_file:
+        try:
+            hosts = open(hosts_file)
+            for line in hosts:
+                append("/etc/hosts", line.rstrip("\n"), use_sudo=True)
+        except IOError:
+            print "ERROR: defined hosts file is missing!"
+
 def get_hostname():
     """Get hostname part of the current host"""
     return re.split("\.", env.host)[0]

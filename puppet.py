@@ -66,7 +66,7 @@ def install_puppetlabs_release_package(pc, proxy_url=None):
         package.download_and_install(url, "puppetlabs-release-pc"+pc, proxy_url=proxy_url)
 
 @task
-def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf", proxy_url=None):
+def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf", proxy_url=None, hosts_file=None):
     """Setup Puppet 4 agent"""
     import package, util
 
@@ -80,6 +80,10 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
     util.set_hostname(hostname + "." + domain)
     util.add_host_entry("127.0.1.1", hostname, domain)
+
+    # Optionally add hosts from a separate file. This is useful when the IP of
+    # the puppetmaster does not match its name in DNS.
+    util.add_host_entries(hosts_file)
     util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="True", onlychanges="False")
 
