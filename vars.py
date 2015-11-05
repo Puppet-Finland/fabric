@@ -16,6 +16,8 @@ class Vars:
             self.set_hostinfo()
 
     def set_hostinfo(self):
+        from sys import exit
+
         """Set hostinfo for this object"""
         # Map release files to operating system names and operating system
         # families. This approach has been adapted from
@@ -45,7 +47,7 @@ class Vars:
             self.osfamily = "RedHat"
         else:
             print "ERROR: unsupported OS family!"
-            sys.exit(1)
+            exit(1)
 
         self.operatingsystem = self.get_operatingsystem()
         self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
