@@ -61,6 +61,19 @@ def add_submodules(basedir, file="files/git-submodules"):
 
 @task
 def init(dir):
+    """Initialize a Git repository"""
     with cd(dir):
         if not exists("./.git"):
             sudo("git init")
+
+@task
+def add_all(basedir):
+    """Add all files to Git"""
+    with cd(basedir):
+        sudo("git add -A")
+
+@task
+def commit(basedir, message):
+    """Commit changes to Git"""
+    with cd(basedir):
+        sudo("git commit -m \""+message+"\"")
