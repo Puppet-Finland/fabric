@@ -147,13 +147,22 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     for module in forge_modules:
         add_forge_module(module)
 
-    # Setup Git
+    # Git setup
     git.install()
     git.init(basedir)
     if not exists(modules_dir):
         sudo("mkdir "+modules_dir)
     git.init(modules_dir)
     git.add_submodules(basedir=modules_dir)
+    git.add_all(basedir)
+    git.commit(basedir, "Initial commit")
+
+    # Link hieradata and manifests from production to testing. This keeps the
+    # testing environment identical to the production environment. The modules
+    # directory in testing is separate and may (or may not) contain modules that
+    # override or complement those in production.
+    util.symlink(remote_codedir+"/environments/production/hieradata", remote_codedir+"/environments/testing/hieradata")
+    util.symlink(remote_codedir+"/environments/production/manifests", remote_codedir+"/environments/testing/manifests")
 
     # Start puppetserver to generate the CA and server certificates/keys
     service.start("puppetserver")
