@@ -77,6 +77,11 @@ def add_host_entries(hosts_file=None):
         except IOError:
             print "ERROR: defined hosts file is missing!"
 
+@task
+def symlink(source, target):
+    """Make a symbolic link"""
+    run("ln -s "+source+" "+target)
+
 def get_hostname():
     """Get hostname part of the current host"""
     return re.split("\.", env.host)[0]
