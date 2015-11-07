@@ -42,7 +42,7 @@ class Vars:
         elif osfamily == 'Ubuntu':
             self.os = Debian()
             self.osfamily = "Debian"
-        elif osfamily == 'RedHat':
+        elif osfamily == 'RedHat' or osfamily == 'CentOS':
             self.os = RedHat()
             self.osfamily = "RedHat"
         else:
