@@ -4,10 +4,12 @@ import sys
 
 ### Generic puppet tasks
 @task
-def run_agent(noop="True", onlychanges="True"):
+def run_agent(noop="True", onlychanges="True", environment=None):
     """Run puppet in normal or no-operation mode"""
     with settings(hide("status"), hide("running")):
         basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false --no-splay"
+        if environment:
+            basecommand = basecommand + " --environment "+environment
         if onlychanges.lower() == "true":
             filtercommand = "| grep -v \"Info:\""
             env.parallel=True
@@ -22,10 +24,14 @@ def run_agent(noop="True", onlychanges="True"):
 
 @task
 @serial
-def show_changes():
+def show_changes(environment=None):
     """Run puppet on no-operation mode and show changes to be made"""
-    sudo("puppet agent --test --noop --waitforcert 30")
+    cmd = "puppet agent --test --noop --waitforcert 30"
 
+    if environment:
+        cmd = cmd + " --environment "+environment
+
+    sudo(cmd)
 
 ### Puppet 3 tasks
 @task
