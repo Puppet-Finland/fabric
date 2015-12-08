@@ -26,6 +26,7 @@ def generate():
         sys.exit(1)
     try:
         tagstring = config.get("puppet", "puppet_tags")
+        nodes_dir = config.get("puppet", "nodes_dir")
     except ConfigParser.NoOptionError:
         print "ERROR: missing option in settings.ini!"
         sys.exit(1)
@@ -55,12 +56,11 @@ def generate():
     env.roledefs = {}
 
     # Fetch latest node data from the Puppetmaster
-    nodesdir = "/etc/puppet/environments/production/hiera/nodes"
     with hide("everything"):
-        if run("test -d "+nodesdir).failed:
+        if run("test -d "+nodes_dir).failed:
             print "ERROR: unable to load Hiera data from remote server!"
             sys.exit(1)
-        with cd(nodesdir):
+        with cd(nodes_dir):
             output = run("grep -E \""+pattern+"\" *.yaml")
 
     # Add to role that includes all hosts. We can't use env.hosts because

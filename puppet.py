@@ -1,12 +1,15 @@
 from fabric.api import *
+from fabric.contrib.files import exists
 import sys
 
 ### Generic puppet tasks
 @task
-def run_agent(noop="True", onlychanges="True"):
+def run_agent(noop="True", onlychanges="True", environment=None):
     """Run puppet in normal or no-operation mode"""
     with settings(hide("status"), hide("running")):
         basecommand = "puppet agent --onetime --no-daemonize --verbose --waitforcert 30 --color=false --no-splay"
+        if environment:
+            basecommand = basecommand + " --environment "+environment
         if onlychanges.lower() == "true":
             filtercommand = "| grep -v \"Info:\""
             env.parallel=True
@@ -21,10 +24,14 @@ def run_agent(noop="True", onlychanges="True"):
 
 @task
 @serial
-def show_changes():
+def show_changes(environment=None):
     """Run puppet on no-operation mode and show changes to be made"""
-    sudo("puppet agent --test --noop --waitforcert 30")
+    cmd = "puppet agent --test --noop --waitforcert 30"
 
+    if environment:
+        cmd = cmd + " --environment "+environment
+
+    sudo(cmd)
 
 ### Puppet 3 tasks
 @task
@@ -48,24 +55,24 @@ def install(master=None, environment='production'):
     sudo("puppet config --section agent set environment %s" % environment)
 
 ### Puppet 4 tasks
-def install_puppetlabs_release_package(pc):
+def install_puppetlabs_release_package(pc, proxy_url=None):
     """Install Puppetlabs apt repo release package"""
     import package, vars
     vars = vars.Vars()
     os = vars.lsbdistcodename
 
     if vars.osfamily == "Debian":
-        package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc)
+        package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc, proxy_url=proxy_url)
     elif vars.osfamily == "RedHat":
         if vars.operatingsystem in ["RedHat", "CentOS", "Scientific"]:
             oscode = "el"
         elif vars.operatingsystem == "Fedora":
             oscode = "fedora"
         url="https://yum.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+oscode+"-"+vars.operatingsystemmajrelease+".noarch.rpm"
-        package.download_and_install(url, "puppetlabs-release-pc"+pc)
+        package.download_and_install(url, "puppetlabs-release-pc"+pc, proxy_url=proxy_url)
 
 @task
-def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf"):
+def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf", proxy_url=None, hosts_file=None):
     """Setup Puppet 4 agent"""
     import package, util
 
@@ -74,24 +81,36 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     if not domain:
         domain = util.get_domain()
 
-    install_puppetlabs_release_package(pc)
+    install_puppetlabs_release_package(pc, proxy_url=proxy_url)
     package.install("puppet-agent")
     util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
     util.set_hostname(hostname + "." + domain)
     util.add_host_entry("127.0.1.1", hostname, domain)
+
+    # Optionally add hosts from a separate file. This is useful when the IP of
+    # the puppetmaster does not match its name in DNS.
+    util.add_host_entries(hosts_file)
     util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="True", onlychanges="False")
 
 @task
 def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
     """Setup Puppet 4 server"""
-    import package, util, git
+    import package, util, git, service
 
     # Local files to copy over
+    basedir = "/etc/puppetlabs"
     local_master_conf = "files/puppet-master.conf"
-    remote_master_conf = "/etc/puppetlabs/puppet/puppet.conf"
+    remote_master_conf = basedir+"/puppet/puppet.conf"
     local_hiera_yaml = "files/hiera.yaml"
-    remote_hiera_yaml = "/etc/puppetlabs/code/hiera.yaml"
+    remote_hiera_yaml = basedir+"/code/hiera.yaml"
+    local_fileserver_conf = "files/fileserver.conf"
+    remote_fileserver_conf = basedir+"/puppet/fileserver.conf"
+    local_environments = "files/environments"
+    remote_codedir = basedir+"/code"
+    local_gitignore = "files/gitignore"
+    remote_gitignore = basedir+"/.gitignore"
+    modules_dir = basedir+"/code/environments/production/modules"
 
     # Verify that all the local files are in place
     try:
@@ -108,15 +127,24 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     if not domain:
         domain = util.get_domain()
 
+    # Ensure that clock is correct before doing anything else, like creating SSL 
+    # certificates.
+    util.set_clock()
+
     # Start the install
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
     util.put_and_chown(local_master_conf, remote_master_conf)
     util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
+    util.put_and_chown(local_fileserver_conf, remote_fileserver_conf)
+    util.put_and_chown(local_gitignore, remote_gitignore)
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
     util.add_host_entry("127.0.1.1", hostname, domain)
+
+    # Copy over template environments
+    util.put_and_chown(local_environments, remote_codedir)
 
     # Add modules from Puppet Forge. These should in my experience be limited to
     # those which provide new types and providers. In particular puppetlabs'
@@ -125,8 +153,44 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     for module in forge_modules:
         add_forge_module(module)
 
-    # Add Git submodules
+    # Git setup
     git.install()
+    git.init(basedir)
+    if not exists(modules_dir):
+        sudo("mkdir "+modules_dir)
+    git.init(modules_dir)
+    git.add_submodules(basedir=modules_dir)
+    git.add_all(basedir)
+    git.commit(basedir, "Initial commit")
+
+    # Link hieradata and manifests from production to testing. This keeps the
+    # testing environment identical to the production environment. The modules
+    # directory in testing is separate and may (or may not) contain modules that
+    # override or complement those in production.
+    util.symlink(remote_codedir+"/environments/production/hieradata", remote_codedir+"/environments/testing/hieradata")
+    util.symlink(remote_codedir+"/environments/production/manifests", remote_codedir+"/environments/testing/manifests")
+
+    # Start puppetserver to generate the CA and server certificates/keys
+    service.start("puppetserver")
+    run_agent(noop="False")
+
+@task
+@serial
+def migrate_node(proxy_url=None):
+    """Migrate node from Puppet 3.x to 4.x"""
+    import package, puppet, vars
+    vars = vars.Vars()
+    package.remove("puppet facter")
+    sudo("rm -f /etc/apt/sources.list.d/puppetlabs.list")
+    if exists("/var/lib/puppet"):
+        sudo("mv /var/lib/puppet /var/lib/puppet.old.3")
+    if exists("/etc/puppet"):
+        sudo("mv /etc/puppet /etc/puppet.old.3")
+    puppet.setup_agent4(proxy_url=proxy_url)
+
+    if vars.osfamily == 'Debian':
+        package.autoremove()
+        puppet.resolve_aptitude_conflicts()
 
 @task
 def add_forge_module(name):
@@ -136,3 +200,19 @@ def add_forge_module(name):
     with hide("everything"), settings(warn_only=True):
         if sudo("puppet module list --color=false 2> /dev/null|grep "+listname).failed:
             sudo("puppet module install "+name)
+
+@task
+def resolve_aptitude_conflicts():
+    """Clear package conflicts in aptitude due to Puppet 3->4 migration""" 
+
+    # Installation of Puppetlabs' Puppet 4 packages on top of older Puppet 3 
+    # package seems to leave aptitude's package selections in a limbo. In 
+    # practice the puppet-agent package from Puppet 4 conflicts with several 
+    # other packages that are marked for installation, but no actually 
+    # installed. Manually resolving this issue would be tiresome, so better do 
+    # it here.
+    #
+    # The ":" after the package name means that any actions (install, remove, 
+    # hold, etc.) set in aptitude are cancelled.
+    #
+    sudo("aptitude install augeas-lenses: ruby-augeas: libaugeas-ruby1.8: libaugeas-ruby1.9.1: libaugeas0: libaugeas-ruby: puppet: puppet-common: facter:")

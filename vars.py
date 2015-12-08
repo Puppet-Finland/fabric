@@ -16,6 +16,8 @@ class Vars:
             self.set_hostinfo()
 
     def set_hostinfo(self):
+        from sys import exit
+
         """Set hostinfo for this object"""
         # Map release files to operating system names and operating system
         # families. This approach has been adapted from
@@ -40,12 +42,12 @@ class Vars:
         elif osfamily == 'Ubuntu':
             self.os = Debian()
             self.osfamily = "Debian"
-        elif osfamily == 'RedHat':
+        elif osfamily == 'RedHat' or osfamily == 'CentOS':
             self.os = RedHat()
             self.osfamily = "RedHat"
         else:
             print "ERROR: unsupported OS family!"
-            sys.exit(1)
+            exit(1)
 
         self.operatingsystem = self.get_operatingsystem()
         self.operatingsystemmajrelease = self.get_operatingsystemmajrelease()
@@ -135,10 +137,14 @@ class Vars:
                 return fullver[index]
         else:
             release = self.get_release_file_content()
-            if maj:
-                return re.split("\.", release)[index][-1:]
+            if self.operatingsystem == 'Fedora':
+                if maj: return re.split(" ", release)[2]
+                else:   return "0"
             else:
-                return re.split("\.", release)[index][-1:]
+                if maj:
+                    return re.split("\.", release)[index][-1:]
+                else:
+                    return re.split("\.", release)[index][-1:]
 
     def get_operatingsystem(self):
         """Get the operating system name"""
@@ -193,6 +199,7 @@ class RedHat(Linux):
         self.package_upgrade_cmd = "yum update"
         self.package_install_cmd = "yum -y install %s"
         self.package_autoremove_cmd = "yum autoremove"
+        self.package_remove_cmd = "yum remove %s"
         self.package_local_install_cmd = "rpm -ivh %s"
         self.package_installed_cmd = "rpm -qs"
         self.default_shell_config = "/etc/bashrc"
@@ -205,6 +212,7 @@ class Debian(Linux):
         self.package_refresh_cmd = "apt-get update"
         self.package_upgrade_cmd = "apt-get dist-upgrade"
         self.package_install_cmd = "apt-get -y install %s"
+        self.package_remove_cmd = "apt-get remove %s"
         self.package_autoremove_cmd = "apt-get autoremove"
         self.package_local_install_cmd = "dpkg -i %s"
         # Using %s after the single quotes does not seem to work

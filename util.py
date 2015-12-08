@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 from fabric.api import *
+from fabric.contrib.files import exists
 from datetime import datetime
 import re
+import os
 
 def getisotime():
     """Convenience method to get current UTC time in yyyymmddhhmm format"""
     ct = datetime.utcnow()
     return ct.strftime("%Y%m%d%H%M")
+
+@task
+def set_clock():
+    """Set clock on the server using ntpdate"""
+    import package
+    package.install("ntpdate")
+    sudo("ntpdate 0.fi.pool.ntp.org 1.fi.pool.ntp.org 2.fi.pool.ntp.org")
 
 @task
 def uname():
@@ -28,10 +37,22 @@ def install_sudo():
             run(vars.os.package_install_cmd % "sudo")
 
 @task
-def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"):
+def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root", overwrite=True):
     """Put a file to remote server and chown it"""
-    put(localfile, remotefile, use_sudo=True, mode=mode)
-    sudo("chown "+owner+":"+group+" "+remotefile)
+    # Configure the exists() check and chown differently depending on whether
+    # we're copying over a file or a directory.
+    with hide("everything"), settings(warn_only=True):
+        if local("test -d "+localfile).succeeded:
+            target = remotefile+"/"+os.path.basename(localfile)
+            chown_cmd = "chown -R"
+        else:
+            target = remotefile
+            chown_cmd = "chown"
+
+    # Only copy things that are not already there
+    if not exists(target) or overwrite:
+        put(localfile, remotefile, use_sudo=True, mode=mode)
+        sudo(chown_cmd+" "+owner+":"+group+" "+remotefile)
 
 @task
 def add_host_entry(ip, hostname, domain):
@@ -43,6 +64,23 @@ def add_host_entry(ip, hostname, domain):
     with hide("warnings"), settings(warn_only=True):
         if run("grep \""+host_line+"\" /etc/hosts").failed:
             sudo("echo "+host_line+" >> /etc/hosts")
+
+@task
+def add_host_entries(hosts_file=None):
+    """Add entries from local hosts file to a remote hosts file"""
+    from fabric.contrib.files import append
+    if hosts_file:
+        try:
+            hosts = open(hosts_file)
+            for line in hosts:
+                append("/etc/hosts", line.rstrip("\n"), use_sudo=True)
+        except IOError:
+            print "ERROR: defined hosts file is missing!"
+
+@task
+def symlink(source, target):
+    """Make a symbolic link"""
+    run("ln -s "+source+" "+target)
 
 def get_hostname():
     """Get hostname part of the current host"""
