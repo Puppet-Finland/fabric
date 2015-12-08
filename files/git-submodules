@@ -1,0 +1,28 @@
+https://github.com/Puppet-Finland/bash.git
+https://github.com/Puppet-Finland/puppetlabs-git.git git
+https://github.com/Puppet-Finland/puppetlabs-inifile.git inifile
+https://github.com/Puppet-Finland/localbackups.git
+https://github.com/Puppet-Finland/locales.git
+https://github.com/Puppet-Finland/localuser.git
+https://github.com/Puppet-Finland/monit.git
+https://github.com/Puppet-Finland/nano.git
+https://github.com/Puppet-Finland/ntp.git
+https://github.com/Puppet-Finland/openvpn.git
+https://github.com/Puppet-Finland/os.git
+https://github.com/Puppet-Finland/packetfilter.git
+https://github.com/Puppet-Finland/postfix.git
+https://github.com/Puppet-Finland/postgresql.git
+https://github.com/Puppet-Finland/puppetagent.git
+https://github.com/Puppet-Finland/puppetdb.git
+https://github.com/Puppet-Finland/puppetlint.git
+https://github.com/Puppet-Finland/puppetmaster.git
+https://github.com/Puppet-Finland/rclocal.git
+https://github.com/Puppet-Finland/ruby.git
+https://github.com/Puppet-Finland/screen.git
+https://github.com/Puppet-Finland/setfacl.git
+https://github.com/Puppet-Finland/ssh.git
+https://github.com/Puppet-Finland/sshd.git
+https://github.com/Puppet-Finland/sudo.git
+https://github.com/Puppet-Finland/systemd.git
+https://github.com/Puppet-Finland/timezone.git
+https://github.com/Puppet-Finland/updater.git

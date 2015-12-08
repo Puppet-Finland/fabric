@@ -1,0 +1,8 @@
+### Site-wide default parameters
+
+# Human-readable name for the server administrator
+admin: 'root'
+
+# Default email addresses used in many Puppet modules
+serveradmin: 'root@localhost'
+servermonitor: 'root@localhost'
