@@ -86,8 +86,7 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
     util.set_hostname(hostname + "." + domain)
 
-    # TODO: This should set the static public IP if available, not local IP
-    util.add_host_entry("127.0.1.1", hostname, domain)
+    util.add_host_entry(util.get_ip(), hostname, domain)
 
     # Optionally add hosts from a separate file. This is useful when the IP of
     # the puppetmaster does not match its name in DNS.
@@ -143,7 +142,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
-    util.add_host_entry("127.0.1.1", hostname, domain)
+    util.add_host_entry(util.get_ip(), hostname, domain)
 
     # Copy over template environments
     util.put_and_chown(local_environments, remote_codedir)

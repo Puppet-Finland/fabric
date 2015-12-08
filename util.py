@@ -111,6 +111,12 @@ def add_to_path(path):
     for file in [ vars.os.default_shell_config, vars.os.default_loginshell_config ]:
         append(file, "export PATH=$PATH:"+path, use_sudo=True)
 
+def get_ip():
+    """Get first non-local ip address"""
+    with hide("everything"):
+        ip_addresses = run('hostname -I').split(' ')
+    return ip_addresses[0]
+
 @task
 def reboot(really='no'):
     """Reboot the machine. Use reboot:really=YES to actually reboot."""
