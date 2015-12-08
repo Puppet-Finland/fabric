@@ -19,27 +19,13 @@
 V4DB="ahostsv4"
 V6DB="hosts"
 
-# The following two sections are required to prevent the fqdn of the
-# puppetmaster from resolving to a localhost address that might be defined in
-# /etc/hosts.
-if [ "$2" = "puppet.openvpn.in" ] && [ "$1" = "-4" ]; then
-    V4RESULT=`dig +short $2 A|head -n 1|tr -d "\n"`
-    echo -n "$V4RESULT"
-    exit 0
-
-elif [ "$2" = "puppet.openvpn.in" ] && [ "$1" = "-6" ]; then
-    V6RESULT=`dig +short $2 AAAA|head -n 1|tr -d "\n"`
-    echo -n "$V6RESULT"
-    exit 0
-
-# These two section are for nodes other than the Puppetmaster
-elif [ "$2" != "puppet.openvpn.in" ] && [ "$1" = "-4" ]; then
+if [ "$1" = "-4" ]; then
 
     V4RESULT=`getent $V4DB $2|head -n 1|cut -d " " -f 1|tr -d "\n"`
     echo -n "$V4RESULT"
     exit 0
 
-elif [ "$2" != "puppet.openvpn.in" ] && [ "$1" = "-6" ]; then
+elif [ "$1" = "-6" ]; then
 
     V4RESULT=`getent $V4DB $2|head -n 1|cut -d " " -f 1|tr -d "\n"`
     V6RESULT=`getent $V6DB $2|head -n 1|cut -d " " -f 1|tr -d "\n"`
