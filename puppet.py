@@ -85,6 +85,8 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     package.install("puppet-agent")
     util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
     util.set_hostname(hostname + "." + domain)
+
+    # TODO: This should set the static public IP if available, not local IP
     util.add_host_entry("127.0.1.1", hostname, domain)
 
     # Optionally add hosts from a separate file. This is useful when the IP of
@@ -172,6 +174,9 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
 
     # Start puppetserver to generate the CA and server certificates/keys
     service.start("puppetserver")
+
+    # Set master FQDN and run agent
+    run("puppet config set --section agent server %s.%s" % (hostname, domain))
     run_agent(noop="False")
 
 @task
