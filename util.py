@@ -78,9 +78,13 @@ def add_host_entries(hosts_file=None):
             print "ERROR: defined hosts file is missing!"
 
 @task
-def symlink(source, target):
+def symlink(source, target, use_sudo=True):
     """Make a symbolic link"""
-    run("ln -s "+source+" "+target)
+    cmd = "ln -s "+source+" "+target
+    if use_sudo:
+        sudo(cmd)
+    else:
+        run(cmd)
 
 def get_hostname():
     """Get hostname part of the current host"""
