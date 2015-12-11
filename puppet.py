@@ -117,6 +117,8 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     remote_codedir = basedir+"/code"
     local_gitignore = "files/gitignore"
     remote_gitignore = basedir+"/.gitignore"
+    local_defaults = "files/puppetserver_defaults"
+    remote_defaults = "/etc/default/puppetserver"
     modules_dir = basedir+"/code/environments/production/modules"
     hiera_nodes_dir = basedir+"/code/environments/production/hieradata/nodes"
 
@@ -148,6 +150,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
     util.put_and_chown(local_fileserver_conf, remote_fileserver_conf)
     util.put_and_chown(local_gitignore, remote_gitignore)
+    util.put_and_chown(local_defaults, remote_defaults)
     util.add_to_path("/opt/puppetlabs/bin")
     util.set_hostname(hostname + "." + domain)
     # "facter fqdn" return a silly name on EC2 without this
