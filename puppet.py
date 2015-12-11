@@ -95,7 +95,8 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     util.add_host_entry(util.get_ip(), hostname, domain)
 
     # Optionally add hosts from a separate file. This is useful when the IP of
-    # the puppetmaster does not match its name in DNS.
+    # the puppetmaster as seen from the Puppet agent node does not match its
+    # name in DNS.
     util.add_host_entries(hosts_file)
     util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="True", onlychanges="False")
