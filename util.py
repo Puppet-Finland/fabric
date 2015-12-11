@@ -83,11 +83,13 @@ def add_host_entries(hosts_file=None):
 @task
 def symlink(source, target, use_sudo=True):
     """Make a symbolic link"""
-    cmd = "ln -s "+source+" "+target
-    if use_sudo:
-        sudo(cmd)
-    else:
-        run(cmd)
+    from fabric.contrib.files import is_link
+    if not is_link(target):
+        cmd = "ln -s "+source+" "+target
+        if use_sudo:
+            sudo(cmd)
+        else:
+            run(cmd)
 
 def get_hostname():
     """Get hostname part of the current host"""
@@ -136,7 +138,7 @@ def reboot(really='no'):
 
 def password():
     """Creates a random password string"""
-    chars = "abcdefghijklmnopqsrtuvwxyzABCDEFGHIJKLMNOPQSRTUVWXYZ"
+    chars = "abcdefghijklmnopqsrtuvwxyzABCDEFGHIJKLMNOPQSRTUVWXYZ"\
             "123456890!#%&-_*<>+=()"
     return ''.join(random.sample(chars, 15))
 
