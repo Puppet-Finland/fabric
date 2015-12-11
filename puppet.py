@@ -1,6 +1,12 @@
 from fabric.api import *
 from fabric.contrib.files import exists
 import sys
+from StringIO import StringIO
+
+try:
+    import yaml
+except ImportError:
+    print "NOTICE: setup_master4 task requires PyYaml package (python-yaml in Debian)"
 
 ### Generic puppet tasks
 @task
@@ -112,6 +118,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     local_gitignore = "files/gitignore"
     remote_gitignore = basedir+"/.gitignore"
     modules_dir = basedir+"/code/environments/production/modules"
+    hiera_nodes_dir = basedir+"/code/environments/production/hieradata/nodes"
 
     # Verify that all the local files are in place
     try:
@@ -127,6 +134,8 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
         hostname = util.get_hostname()
     if not domain:
         domain = util.get_domain()
+
+    fqdn = "%s.%s" % (hostname, domain)
 
     # Ensure that clock is correct before doing anything else, like creating SSL 
     # certificates.
@@ -146,6 +155,11 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
 
     # Copy over template environments
     util.put_and_chown(local_environments, remote_codedir)
+
+    # Generate master node yaml file (fqdn.yaml) and copy it over to remote server
+    master_yaml = StringIO()
+    make_puppetmaster_yaml(fqdn, util.password(), stream=master_yaml)
+    util.put_and_chown(master_yaml, "%s/%s.yaml" % (hiera_nodes_dir, fqdn))
 
     # Add modules from Puppet Forge. These should in my experience be limited to
     # those which provide new types and providers. In particular puppetlabs'
@@ -175,8 +189,18 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     service.start("puppetserver")
 
     # Set master FQDN and run agent
-    run("puppet config set --section agent server %s.%s" % (hostname, domain))
+    run("puppet config set --section agent server %s" % fqdn)
     run_agent(noop="False")
+
+
+def make_puppetmaster_yaml(hostname, db_password, stream=None):
+    yaml_data = {
+        'puppetdb::db_password': db_password,
+        'puppetmaster::puppetdb_host': hostname,
+        'role': ['puppetserver'],
+    }
+    return yaml.dump(yaml_data, stream=stream, default_flow_style=False)
+
 
 @task
 @serial

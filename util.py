@@ -2,6 +2,8 @@
 from fabric.api import *
 from fabric.contrib.files import exists
 from datetime import datetime
+
+import random
 import re
 import os
 
@@ -42,7 +44,8 @@ def put_and_chown(localfile, remotefile, mode="0644", owner="root", group="root"
     # Configure the exists() check and chown differently depending on whether
     # we're copying over a file or a directory.
     with hide("everything"), settings(warn_only=True):
-        if local("test -d "+localfile).succeeded:
+        if isinstance(localfile, basestring) and \
+                local("test -d "+localfile).succeeded:
             target = remotefile+"/"+os.path.basename(localfile)
             chown_cmd = "chown -R"
         else:
@@ -129,6 +132,14 @@ def reboot(really='no'):
         sudo("shutdown -r now")
     else:
         print("Use reboot:really=YES to actually reboot")
+
+
+def password():
+    """Creates a random password string"""
+    chars = "abcdefghijklmnopqsrtuvwxyzABCDEFGHIJKLMNOPQSRTUVWXYZ"
+            "123456890!#%&-_*<>+=()"
+    return ''.join(random.sample(chars, 15))
+
 
 def isTrue(s):
     """Convert a Yes into True and everything else into False"""
