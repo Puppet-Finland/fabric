@@ -1,0 +1,4 @@
+code/environments/production/modules
+code/environments/testing/modules
+code/environments/testing/hieradata
+code/environments/testing/manifests
