@@ -1,4 +1,6 @@
 classes:
+    - monit
+    - postfix
     - puppetdb
     - puppetmaster
     - puppetmaster::validation
