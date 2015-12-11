@@ -200,7 +200,7 @@ def make_puppetmaster_yaml(hostname, db_password, stream=None):
     yaml_data = {
         'puppetdb::db_password': db_password,
         'puppetmaster::puppetdb_host': hostname,
-        'role': ['puppetserver'],
+        'role': 'puppetserver',
     }
     return yaml.dump(yaml_data, stream=stream, default_flow_style=False)
 
