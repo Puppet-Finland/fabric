@@ -192,7 +192,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     service.start("puppetserver")
 
     # Set master FQDN and run agent
-    run("puppet config set --section agent server %s" % fqdn)
+    sudo("puppet config set --section agent server %s" % fqdn)
     run_agent(noop="False")
 
 

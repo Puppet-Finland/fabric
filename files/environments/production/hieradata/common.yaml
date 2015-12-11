@@ -1,5 +1,7 @@
 ### Site-wide default parameters
 
+classes: []
+
 # Human-readable name for the server administrator
 admin: 'root'
 
