@@ -1,0 +1,20 @@
+classes:
+    - puppetdb
+    - puppetmaster
+    - puppetmaster::validation
+    - puppetlint
+    - bash
+
+puppetagent::manage_puppet_conf: 'no'
+
+puppetdb::java_heap_size: '512'
+
+puppetlint::p4plugins: present
+puppetlint::provider: gem
+
+puppetmaster::validation::a_record_check: absent
+puppetmaster::validation::erb_check: present
+puppetmaster::validation::json_check: present
+puppetmaster::validation::pp_check: present
+puppetmaster::validation::puppet_lint_check: absent
+puppetmaster::validation::puppet_lint_opts: --no-class_inherits_from_params_class-check --no-80chars-check
