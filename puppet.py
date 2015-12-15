@@ -165,6 +165,9 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     # Copy over template environments
     util.put_and_chown(local_environments, remote_codedir)
 
+    # Create global files directory
+    sudo("mkdir "+remote_codedir+"/files")
+
     # Generate master node yaml file (fqdn.yaml) and copy it over to remote server
     master_yaml = StringIO()
     make_puppetmaster_yaml(fqdn, util.password(), stream=master_yaml)
@@ -199,6 +202,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
 
     # Set master FQDN and run agent
     sudo("puppet config set --section agent server %s" % fqdn)
+    util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="False")
 
 
