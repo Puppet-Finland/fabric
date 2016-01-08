@@ -125,6 +125,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     remote_gitignore = basedir+"/.gitignore"
     local_defaults = "files/puppetserver_defaults"
     remote_defaults = "/etc/default/puppetserver"
+    local_files_dir = "files/files"
     modules_dir = basedir+"/code/environments/production/modules"
     hiera_nodes_dir = basedir+"/code/environments/production/hieradata/nodes"
 
@@ -165,8 +166,8 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     # Copy over template environments
     util.put_and_chown(local_environments, remote_codedir)
 
-    # Create global files directory
-    sudo("mkdir "+remote_codedir+"/files")
+    # Copy over the Puppet fileserver directory
+    util.put_and_chown(local_files_dir, remote_codedir)
 
     # Generate master node yaml file (fqdn.yaml) and copy it over to remote server
     master_yaml = StringIO()
