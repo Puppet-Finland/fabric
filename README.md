@@ -81,9 +81,10 @@ dictionary, *roledefs.pickle*. This local copy of the role definitions can then
 be updated as necessary. Although fetching the most current nodelist from Hiera 
 on every Fabric run would certainly be doable, it would probably be a much 
 bigger hassle in the long run for the user than periodically updating the local 
-host/role cache .
+host/role cache.
 
-To list active nodes and roles, do
+After you've created a custom fabfile.py (see below), you can list active nodes
+and roles like this:
 
     $ fab hostinfo.show
     [localhost] Executing task 'hostinfo.show'
