@@ -218,7 +218,7 @@ def make_puppetmaster_yaml(hostname, db_password, stream=None):
 
 @task
 @serial
-def migrate_node(proxy_url=None):
+def migrate_node(hostname=None, domain=None, puppetserver=None, proxy_url=None):
     """Migrate node from Puppet 3.x to 4.x"""
     import package, puppet, vars
     vars = vars.Vars()
@@ -228,7 +228,7 @@ def migrate_node(proxy_url=None):
         sudo("mv /var/lib/puppet /var/lib/puppet.old.3")
     if exists("/etc/puppet"):
         sudo("mv /etc/puppet /etc/puppet.old.3")
-    puppet.setup_agent4(proxy_url=proxy_url)
+    puppet.setup_agent4(hostname=hostname, domain=domain, puppetserver=puppetserver, proxy_url=proxy_url)
 
     if vars.osfamily == 'Debian':
         package.autoremove()
