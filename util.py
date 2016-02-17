@@ -25,6 +25,14 @@ def uname():
     run("uname -a")
 
 @task
+@parallel
+def uptime():
+    """Show system uptime"""
+    with hide("everything"):
+        output = run("uptime")
+	print env.host + ": "+output
+
+@task
 def df():
     """Check available disk space"""
     run("df -h")
