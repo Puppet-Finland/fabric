@@ -206,6 +206,10 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     util.add_to_path("/opt/puppetlabs/bin")
     run_agent(noop="False")
 
+    # The Puppet run modified puppet and puppetdb configs, so we need to
+    # version the changes.
+    git.add_all(basedir)
+    git.commit(basedir, "Commit after the first Puppet run")
 
 def make_puppetmaster_yaml(hostname, db_password, stream=None):
     yaml_data = {
