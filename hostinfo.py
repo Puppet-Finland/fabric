@@ -100,6 +100,7 @@ def generate():
 @hosts('localhost')
 def show():
     '''Display contents of env.roledefs'''
+    env.roledefs = load_roledefs()
     print "Roles:"
     for role in sorted(env.roledefs):
         print "  "+role+": "
