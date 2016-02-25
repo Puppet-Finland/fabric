@@ -92,7 +92,13 @@ def generate():
     with open('roledefs.pickle', 'wb') as roledefs:
         pickle.dump(env.roledefs, roledefs)
 
-    print "NOTICE: Successfully generated and pickled env.roledefs!"
+    print
+    print "Successfully generated and pickled env.roledefs. Next you have to add this"
+    print "to your main fabfile.py:"
+    print
+    print "    env.roledefs = hostinfo.load_roledefs()"
+    print
+    print "This will ensure that the roledefs are actually used."
 
 @task
 @serial
