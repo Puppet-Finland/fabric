@@ -91,8 +91,19 @@ def add_host_entries(hosts_file=None):
 @task
 def symlink(source, target, use_sudo=True):
     """Make a symbolic link"""
-    from fabric.contrib.files import is_link
-    if not is_link(target):
+
+    # Some older versions of Fabric do not have the is_link method 
+    try:
+        from fabric.contrib.files import is_link
+        is_a_link = is_link(target)
+    except ImportError:
+        with settings(hide("everything"), warn_only=True):
+            if run("test -L "+target).failed:
+	        is_a_link = False
+            else:
+                is_a_link = True
+
+    if not is_a_link:
         cmd = "ln -s "+source+" "+target
         if use_sudo:
             sudo(cmd)
