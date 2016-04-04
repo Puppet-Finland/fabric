@@ -53,6 +53,8 @@ it looks like this:
     [puppet]
     puppet_tags = role, importance, admin, connectivity
     nodes_dir = /etc/puppetlabs/code/environments/production/hieradata/nodes
+    # Sane defaults for various tasks
+    puppetserver = puppet.domain.com
 
 It may be useful to then create a Fabric configuration file, $HOME/.fabricrc, 
 with contents such as this:

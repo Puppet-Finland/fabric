@@ -80,7 +80,7 @@ def install_puppetlabs_release_package(pc, proxy_url=None):
 @task
 def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent.conf", puppetserver=None, proxy_url=None, hosts_file=None):
     """Setup Puppet 4 agent"""
-    import package, util
+    import package, util, config
 
     if not hostname:
         hostname = util.get_hostname()
@@ -89,6 +89,12 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
 
     install_puppetlabs_release_package(pc, proxy_url=proxy_url)
     package.install("puppet-agent")
+
+    # Use puppetserver value from setting.ini file if none is given on the
+    # command-line. If that fails use the default.
+    if not puppetserver:
+        try:    puppetserver = config.get("puppet", "puppetserver")
+        except: puppetserver = None
 
     # Add a customized puppet.conf
     util.put_and_chown(agent_conf, "/etc/puppetlabs/puppet/puppet.conf")
