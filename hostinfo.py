@@ -3,12 +3,12 @@ from fabric.api import *
 import sys
 import pickle
 import re
-import ConfigParser
 
 @serial
 @task
 def generate():
     """Generate a list of hosts and roles based on Hiera data"""
+    import config
 
     # Ensure that we're running in the correct local directory
     try:
@@ -17,18 +17,11 @@ def generate():
         print("ERROR: you must run this command in the directory where fabfile.py resides!")
         sys.exit(1)
 
-    # Load settings.ini
-    config = ConfigParser.RawConfigParser()
-    try:
-        config.readfp(open("settings.ini"))
-    except IOError:
-        print "ERROR: unable to load settings.ini, can't generate roledefs!"
-        sys.exit(1)
     try:
         tagstring = config.get("puppet", "puppet_tags")
         nodes_dir = config.get("puppet", "nodes_dir")
-    except ConfigParser.NoOptionError:
-        print "ERROR: missing option in settings.ini!"
+    except:
+        print("ERROR: unable to load settings from settings.ini!")
         sys.exit(1)
 
     # Generate the search pattern for tags
