@@ -121,6 +121,8 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     basedir = "/etc/puppetlabs"
     local_master_conf = "files/puppet-master.conf"
     remote_master_conf = basedir+"/puppet/puppet.conf"
+    local_autosign_conf = "files/autosign.conf"
+    remote_autosign_conf = basedir+"/puppet/autosign.conf"
     local_hiera_yaml = "files/hiera.yaml"
     remote_hiera_yaml = basedir+"/code/hiera.yaml"
     local_fileserver_conf = "files/fileserver.conf"
@@ -160,6 +162,7 @@ def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs
     install_puppetlabs_release_package(pc)
     package.install("puppetserver")
     util.put_and_chown(local_master_conf, remote_master_conf)
+    util.put_and_chown(local_autosign_conf, remote_autosign_conf)
     util.put_and_chown(local_hiera_yaml, remote_hiera_yaml)
     util.put_and_chown(local_fileserver_conf, remote_fileserver_conf)
     util.put_and_chown(local_gitignore, remote_gitignore)
