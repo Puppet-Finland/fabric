@@ -20,6 +20,7 @@ def set_clock():
     sudo("ntpdate 0.fi.pool.ntp.org 1.fi.pool.ntp.org 2.fi.pool.ntp.org")
 
 @task
+@parallel
 def uname():
     """Show kernel version"""
     run("uname -a")
