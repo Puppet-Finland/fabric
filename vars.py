@@ -213,7 +213,7 @@ class Debian(Linux):
         self.package_upgrade_cmd = "apt-get dist-upgrade"
         self.package_install_cmd = "apt-get -y install %s"
         self.package_remove_cmd = "apt-get remove %s"
-        self.package_autoremove_cmd = "apt-get autoremove"
+        self.package_autoremove_cmd = "apt-get -y autoremove"
         self.package_local_install_cmd = "dpkg -i %s"
         # Using %s after the single quotes does not seem to work
         self.package_installed_cmd = "dpkg-query -Wf'${db:Status-abbrev}'"
