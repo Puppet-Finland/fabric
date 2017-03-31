@@ -254,6 +254,18 @@ def add_forge_module(name):
             sudo("puppet module install "+name)
 
 @task
+def set_environment(environment):
+    """Set Puppet environment"""
+    with hide("everything"):
+        cmd_prefix = "puppet config --section agent"
+        get_env_cmd = cmd_prefix + " print environment"
+
+        old_environment = sudo(get_env_cmd)
+        if old_environment != environment:
+            sudo(cmd_prefix + " set environment "+environment)
+            print "["+env.host+"]: changed puppet environment: " + old_environment + " -> " + environment
+
+@task
 def resolve_aptitude_conflicts():
     """Clear package conflicts in aptitude due to Puppet 3->4 migration""" 
 
