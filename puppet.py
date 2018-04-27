@@ -135,7 +135,7 @@ def setup_agent4(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     # name in DNS.
     util.add_host_entries(hosts_file)
     util.add_to_path("/opt/puppetlabs/bin")
-    run_agent(noop="True", onlychanges="False")
+    run_agent(noop="False", onlychanges="False")
 
 @task
 def setup_server4(hostname=None, domain=None, pc="1", forge_modules=["puppetlabs/stdlib", "puppetlabs/concat", "puppetlabs/firewall", "puppetlabs/apt"]):
