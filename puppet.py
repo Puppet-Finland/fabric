@@ -39,15 +39,15 @@ def show_changes(environment=None):
 
     sudo(cmd)
 
-### Puppet 4 tasks
-def install_puppetlabs_release_package(pc, proxy_url=None):
+### Puppet 5 tasks
+def install_puppetlabs_release_package(proxy_url=None):
     """Install Puppetlabs apt repo release package"""
     import package, vars
     vars = vars.Vars()
     os = vars.lsbdistcodename
 
     if vars.osfamily == "Debian":
-        package.download_and_install("https://apt.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+os+".deb", "puppetlabs-release-pc"+pc, proxy_url=proxy_url)
+        package.download_and_install("https://apt.puppetlabs.com/puppet-release-"+os+".deb", "puppet-release", proxy_url=proxy_url)
     elif vars.osfamily == "RedHat":
         if vars.operatingsystem in ["RedHat", "CentOS", "Scientific"]:
             oscode = "el"
@@ -56,10 +56,8 @@ def install_puppetlabs_release_package(pc, proxy_url=None):
         url="https://yum.puppetlabs.com/puppetlabs-release-pc"+pc+"-"+oscode+"-"+vars.operatingsystemmajrelease+".noarch.rpm"
         package.download_and_install(url, "puppetlabs-release-pc"+pc, proxy_url=proxy_url)
 
-
-### Puppet 5 tasks ###
 @task
-def setup_agent5(hostname=None, domain=None, pc="1", agent_conf="files/puppet-agent5.conf", puppetserver=None, proxy_url=None, hosts_file=None):
+def setup_agent5(hostname=None, domain=None, agent_conf="files/puppet-agent5.conf", puppetserver=None, proxy_url=None, hosts_file=None):
     """Setup Puppet 5 agent"""
     import package, util, config
 
@@ -68,7 +66,7 @@ def setup_agent5(hostname=None, domain=None, pc="1", agent_conf="files/puppet-ag
     if not domain:
         domain = util.get_domain()
 
-    install_puppetlabs_release_package(pc, proxy_url=proxy_url)
+    install_puppetlabs_release_package(proxy_url=proxy_url)
     package.install("puppet-agent")
 
     # Use puppetserver value from setting.ini file if none is given on the
